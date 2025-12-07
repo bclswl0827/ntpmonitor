@@ -1,0 +1,55 @@
+scalar Int32
+scalar Int64
+scalar Map
+scalar Any
+
+type ClockDrift {
+  timestamp: Int64!
+  reference: String!
+  longTermDrift: Float!
+  shortTermDrift: Float!
+}
+
+type NTPServer {
+  uuid: String!
+  name: String!
+  address: String!
+  remark: String!
+  updatedAt: Int64!
+}
+
+type ServerOffset {
+  timestamp: Int64!
+  reference: String!
+  offset: Int64!
+  roundTrip: Int64!
+  rootDelay: Int64!
+  rootDispersion: Int64!
+  rootDistance: Int64!
+  stratum: Int!
+  serverRefId: String!
+}
+
+type Mutation {
+  setPollingInterval(interval: Int64!): Boolean!
+  setReferenceNTPServer(server: String!): Boolean!
+  updateObserveNTPServer(
+    uuid: String!
+    name: String
+    address: String
+    remark: String
+  ): Boolean!
+  removeObserveNTPServer(uuid: String!): Boolean!
+  addObserveNTPServer(name: String!, address: String!, remark: String): Boolean!
+  purgeNTPOffsets(before: Int64): Boolean!
+  purgeClockDrifts(before: Int64): Boolean!
+}
+
+type Query {
+  getCurrentTime: Int64!
+  getPollingInterval: Int64!
+  getReferenceNTPServer: String!
+  getObserveNTPServerList: [NTPServer!]!
+  getClockDrift(start: Int64!, end: Int64): [ClockDrift!]!
+  getServerOffset(uuid: String!, start: Int64!, end: Int64): [ServerOffset!]!
+}
