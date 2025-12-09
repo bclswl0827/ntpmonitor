@@ -201,7 +201,7 @@ const Home = () => {
                 <span className="font-mono text-gray-700">{syncDetails.content}</span>
 
                 <select
-                    className="w-fit rounded border border-gray-300 p-2 font-mono text-sm"
+                    className="w-fit max-w-full rounded border border-gray-300 p-2 font-mono text-sm"
                     value={localTimezone}
                     onChange={({ target }) => {
                         setLocalTimezone(target.value);
