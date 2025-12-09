@@ -1,1 +1,0 @@
-import{y as o,E as a}from"./index-C204wCFj.js";const t=()=>{const e=()=>{window.history.back()};return o.jsx("div",{className:"p-8",children:o.jsx(a,{code:404,heading:"Page Not Found",content:"The page you are looking for does not exist.",action:{onClick:e,label:"Go Back"}})})};export{t as default};

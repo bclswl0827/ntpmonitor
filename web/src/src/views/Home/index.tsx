@@ -78,7 +78,7 @@ const Home = () => {
         const best = samples.reduce((a, b) => (a.rtt < b.rtt ? a : b));
 
         setReferenceServer(best.reference);
-        setSyncedAt({ local: Date.now(), upstream: best.syncedAt });
+        setSyncedAt({ local: Date.now() - best.diff, upstream: best.syncedAt });
 
         setTimeSynced(true);
         setLatency(best.rtt);
