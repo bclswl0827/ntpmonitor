@@ -1,3 +1,5 @@
+import { mdiRefresh } from '@mdi/js';
+import Icon from '@mdi/react';
 import { getTimeZones } from '@vvo/tzdb';
 import { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
@@ -42,9 +44,9 @@ const Home = () => {
 
             const { timestamp, syncedAt, reference } = res.data.getCurrentTime;
             const rtt = t1 - t0;
-            const diff = t0 - timestamp - rtt / 2;
+            const diff = (t0 + t1) / 2 - timestamp;
 
-            return { timestamp, rtt, diff, syncedAt, reference };
+            return { rtt, diff, syncedAt, reference };
         };
 
         await sleep(500);
@@ -71,17 +73,18 @@ const Home = () => {
             return;
         }
 
-        setReferenceServer(s1.reference);
-        setSyncedAt({ local: s1.timestamp, upstream: s1.syncedAt });
+        const samples = [s1, s2, s3, s4];
 
-        const avgRtt = (s1.rtt + s2.rtt + s3.rtt + s4.rtt) / 4;
-        const avgDiff = (s1.diff + s2.diff + s3.diff + s4.diff) / 4;
+        const best = samples.reduce((a, b) => (a.rtt < b.rtt ? a : b));
+
+        setReferenceServer(best.reference);
+        setSyncedAt({ local: Date.now(), upstream: best.syncedAt });
 
         setTimeSynced(true);
-        setLatency(avgRtt);
-        setErrorRange(avgRtt / 4);
-        setTimeDiff(avgDiff);
-        setIsAccurate(Math.abs(avgDiff) < 200);
+        setLatency(best.rtt);
+        setErrorRange(best.rtt / 2);
+        setTimeDiff(best.diff);
+        setIsAccurate(Math.abs(best.diff) < 200);
     }, [getCurrentTime]);
 
     useEffect(() => {
@@ -116,7 +119,7 @@ const Home = () => {
         if (isAccurate) {
             return {
                 heading: 'Your time is exact!',
-                content: `The difference from ${hostname} was ${(timeDiff / 1000).toFixed(3)} seconds (±${(errorRange / 1000).toFixed(3)} seconds). `
+                content: `The difference from ${hostname} was ${timeDiff >= 0 ? '+' : ''}${(timeDiff / 1000).toFixed(3)} seconds (±${(errorRange / 1000).toFixed(3)} seconds). `
             };
         }
 
@@ -195,9 +198,23 @@ const Home = () => {
     return (
         <div className="w-full">
             <div className="ml-4 flex flex-col space-y-2 md:mt-6">
-                <h2 className="mb-4 text-4xl font-extrabold text-gray-800">
-                    {syncDetails.heading}
-                </h2>
+                <div className="mb-2 flex flex-col gap-2 md:flex-row md:items-center">
+                    <h2 className="text-4xl font-extrabold text-gray-800">{syncDetails.heading}</h2>
+                    <button
+                        className="btn btn-sm bg-base-200 hover:bg-base-300 rounded-xl border px-3 py-1 font-semibold text-gray-700"
+                        onClick={() => {
+                            setTimeSynced(false);
+                            syncTime();
+                        }}
+                        disabled={!timeSynced}
+                    >
+                        <Icon path={mdiRefresh} size={0.85} className="opacity-80" />
+                        <span className="tracking-wide">
+                            {timeSynced ? 'Resync' : 'Syncing...'}
+                        </span>
+                    </button>
+                </div>
+
                 <span className="font-mono text-gray-700">{syncDetails.content}</span>
 
                 <select
