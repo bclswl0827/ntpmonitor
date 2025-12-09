@@ -200,19 +200,18 @@ const Home = () => {
             <div className="ml-4 flex flex-col space-y-2 md:mt-6">
                 <div className="mb-2 flex flex-col gap-2 md:flex-row md:items-center">
                     <h2 className="text-4xl font-extrabold text-gray-800">{syncDetails.heading}</h2>
-                    <button
-                        className="btn btn-sm bg-base-200 hover:bg-base-300 rounded-xl border px-3 py-1 font-semibold text-gray-700"
-                        onClick={() => {
-                            setTimeSynced(false);
-                            syncTime();
-                        }}
-                        disabled={!timeSynced}
-                    >
-                        <Icon path={mdiRefresh} size={0.85} className="opacity-80" />
-                        <span className="tracking-wide">
-                            {timeSynced ? 'Resync' : 'Syncing...'}
-                        </span>
-                    </button>
+                    {timeSynced && (
+                        <button
+                            className="btn btn-sm bg-base-200 hover:bg-base-300 rounded-md border px-3 py-1 font-semibold text-gray-700"
+                            onClick={() => {
+                                setTimeSynced(false);
+                                syncTime();
+                            }}
+                        >
+                            <Icon path={mdiRefresh} size={0.85} className="opacity-80" />
+                            <span className="tracking-wide">Resync</span>
+                        </button>
+                    )}
                 </div>
 
                 <span className="font-mono text-gray-700">{syncDetails.content}</span>
@@ -271,11 +270,11 @@ const Home = () => {
                             <span className="font-medium">{localTimezone}</span>
 
                             <span className="text-right">Round-trip Delay:</span>
-                            <span className="font-medium">{latency.toFixed(3)} ms</span>
+                            <span className="font-medium">{latency} ms</span>
                             <span className="text-right">Local Time Offset:</span>
-                            <span className="font-medium">{timeDiff.toFixed(3)} ms</span>
+                            <span className="font-medium">{timeDiff} ms</span>
                             <span className="mb-2 text-right">Error Range:</span>
-                            <span className="font-medium">±{errorRange.toFixed(3)} ms</span>
+                            <span className="font-medium">±{errorRange} ms</span>
 
                             <span className="text-right">Upstream Synced At:</span>
                             <span className="font-medium">

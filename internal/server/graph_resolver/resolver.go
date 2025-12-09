@@ -10,6 +10,11 @@ import (
 // It serves as dependency injection for your app, add any dependencies you require here.
 
 type Resolver struct {
+	Password      string
 	ActionHandler *action.Handler
 	RemoteTimeFn  polling_reference_server.RemoteTimeFunc
+}
+
+func (r *Resolver) isValidPassword(password string) bool {
+	return r.Password == password
 }

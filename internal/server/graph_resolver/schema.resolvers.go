@@ -6,6 +6,7 @@ package graph_resolver
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/bclswl0827/ntpmonitor/internal/dao/model"
@@ -15,7 +16,10 @@ import (
 )
 
 // SetPollingInterval is the resolver for the setPollingInterval field.
-func (r *mutationResolver) SetPollingInterval(ctx context.Context, interval int64) (bool, error) {
+func (r *mutationResolver) SetPollingInterval(ctx context.Context, password string, interval int64) (bool, error) {
+	if !r.isValidPassword(password) {
+		return false, errors.New("unauthorized access")
+	}
 	if err := (&settings.PollingInterval{}).Set(r.ActionHandler, interval); err != nil {
 		return false, err
 	}
@@ -23,7 +27,10 @@ func (r *mutationResolver) SetPollingInterval(ctx context.Context, interval int6
 }
 
 // SetReferenceNTPServer is the resolver for the setReferenceNTPServer field.
-func (r *mutationResolver) SetReferenceNTPServer(ctx context.Context, server string) (bool, error) {
+func (r *mutationResolver) SetReferenceNTPServer(ctx context.Context, password string, server string) (bool, error) {
+	if !r.isValidPassword(password) {
+		return false, errors.New("unauthorized access")
+	}
 	if err := (&settings.ReferenceServer{}).Set(r.ActionHandler, server); err != nil {
 		return false, err
 	}
@@ -31,7 +38,10 @@ func (r *mutationResolver) SetReferenceNTPServer(ctx context.Context, server str
 }
 
 // UpdateObserveNTPServer is the resolver for the updateObserveNTPServer field.
-func (r *mutationResolver) UpdateObserveNTPServer(ctx context.Context, uuid string, name *string, address *string, remark *string) (bool, error) {
+func (r *mutationResolver) UpdateObserveNTPServer(ctx context.Context, password string, uuid string, name *string, address *string, remark *string) (bool, error) {
+	if !r.isValidPassword(password) {
+		return false, errors.New("unauthorized access")
+	}
 	if err := r.ActionHandler.NtpServersUpdate(uuid, name, address, remark); err != nil {
 		return false, err
 	}
@@ -39,7 +49,10 @@ func (r *mutationResolver) UpdateObserveNTPServer(ctx context.Context, uuid stri
 }
 
 // RemoveObserveNTPServer is the resolver for the removeObserveNTPServer field.
-func (r *mutationResolver) RemoveObserveNTPServer(ctx context.Context, uuid string) (bool, error) {
+func (r *mutationResolver) RemoveObserveNTPServer(ctx context.Context, password string, uuid string) (bool, error) {
+	if !r.isValidPassword(password) {
+		return false, errors.New("unauthorized access")
+	}
 	if err := r.ActionHandler.NtpServersRemove(uuid); err != nil {
 		return false, err
 	}
@@ -47,7 +60,10 @@ func (r *mutationResolver) RemoveObserveNTPServer(ctx context.Context, uuid stri
 }
 
 // AddObserveNTPServer is the resolver for the addObserveNTPServer field.
-func (r *mutationResolver) AddObserveNTPServer(ctx context.Context, name string, address string, remark *string) (bool, error) {
+func (r *mutationResolver) AddObserveNTPServer(ctx context.Context, password string, name string, address string, remark *string) (bool, error) {
+	if !r.isValidPassword(password) {
+		return false, errors.New("unauthorized access")
+	}
 	if remark == nil {
 		remark = new(string)
 	}
@@ -58,7 +74,10 @@ func (r *mutationResolver) AddObserveNTPServer(ctx context.Context, name string,
 }
 
 // PurgeNTPOffsets is the resolver for the purgeNTPOffsets field.
-func (r *mutationResolver) PurgeNTPOffsets(ctx context.Context, before *int64) (bool, error) {
+func (r *mutationResolver) PurgeNTPOffsets(ctx context.Context, password string, before *int64) (bool, error) {
+	if !r.isValidPassword(password) {
+		return false, errors.New("unauthorized access")
+	}
 	if before == nil {
 		err := r.ActionHandler.ServerOffsetsRemoveAll()
 		return err == nil, err
@@ -69,7 +88,10 @@ func (r *mutationResolver) PurgeNTPOffsets(ctx context.Context, before *int64) (
 }
 
 // PurgeClockDrifts is the resolver for the purgeClockDrifts field.
-func (r *mutationResolver) PurgeClockDrifts(ctx context.Context, before *int64) (bool, error) {
+func (r *mutationResolver) PurgeClockDrifts(ctx context.Context, password string, before *int64) (bool, error) {
+	if !r.isValidPassword(password) {
+		return false, errors.New("unauthorized access")
+	}
 	if before == nil {
 		err := r.ActionHandler.ClockDriftsRemoveAll()
 		return err == nil, err

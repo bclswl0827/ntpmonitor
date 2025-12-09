@@ -55,13 +55,13 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		AddObserveNTPServer    func(childComplexity int, name string, address string, remark *string) int
-		PurgeClockDrifts       func(childComplexity int, before *int64) int
-		PurgeNTPOffsets        func(childComplexity int, before *int64) int
-		RemoveObserveNTPServer func(childComplexity int, uuid string) int
-		SetPollingInterval     func(childComplexity int, interval int64) int
-		SetReferenceNTPServer  func(childComplexity int, server string) int
-		UpdateObserveNTPServer func(childComplexity int, uuid string, name *string, address *string, remark *string) int
+		AddObserveNTPServer    func(childComplexity int, password string, name string, address string, remark *string) int
+		PurgeClockDrifts       func(childComplexity int, password string, before *int64) int
+		PurgeNTPOffsets        func(childComplexity int, password string, before *int64) int
+		RemoveObserveNTPServer func(childComplexity int, password string, uuid string) int
+		SetPollingInterval     func(childComplexity int, password string, interval int64) int
+		SetReferenceNTPServer  func(childComplexity int, password string, server string) int
+		UpdateObserveNTPServer func(childComplexity int, password string, uuid string, name *string, address *string, remark *string) int
 	}
 
 	NTPServer struct {
@@ -101,13 +101,13 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
-	SetPollingInterval(ctx context.Context, interval int64) (bool, error)
-	SetReferenceNTPServer(ctx context.Context, server string) (bool, error)
-	UpdateObserveNTPServer(ctx context.Context, uuid string, name *string, address *string, remark *string) (bool, error)
-	RemoveObserveNTPServer(ctx context.Context, uuid string) (bool, error)
-	AddObserveNTPServer(ctx context.Context, name string, address string, remark *string) (bool, error)
-	PurgeNTPOffsets(ctx context.Context, before *int64) (bool, error)
-	PurgeClockDrifts(ctx context.Context, before *int64) (bool, error)
+	SetPollingInterval(ctx context.Context, password string, interval int64) (bool, error)
+	SetReferenceNTPServer(ctx context.Context, password string, server string) (bool, error)
+	UpdateObserveNTPServer(ctx context.Context, password string, uuid string, name *string, address *string, remark *string) (bool, error)
+	RemoveObserveNTPServer(ctx context.Context, password string, uuid string) (bool, error)
+	AddObserveNTPServer(ctx context.Context, password string, name string, address string, remark *string) (bool, error)
+	PurgeNTPOffsets(ctx context.Context, password string, before *int64) (bool, error)
+	PurgeClockDrifts(ctx context.Context, password string, before *int64) (bool, error)
 }
 type QueryResolver interface {
 	GetCurrentTime(ctx context.Context) (*graph_model.RemoteTime, error)
@@ -172,7 +172,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.AddObserveNTPServer(childComplexity, args["name"].(string), args["address"].(string), args["remark"].(*string)), true
+		return e.complexity.Mutation.AddObserveNTPServer(childComplexity, args["password"].(string), args["name"].(string), args["address"].(string), args["remark"].(*string)), true
 	case "Mutation.purgeClockDrifts":
 		if e.complexity.Mutation.PurgeClockDrifts == nil {
 			break
@@ -183,7 +183,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.PurgeClockDrifts(childComplexity, args["before"].(*int64)), true
+		return e.complexity.Mutation.PurgeClockDrifts(childComplexity, args["password"].(string), args["before"].(*int64)), true
 	case "Mutation.purgeNTPOffsets":
 		if e.complexity.Mutation.PurgeNTPOffsets == nil {
 			break
@@ -194,7 +194,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.PurgeNTPOffsets(childComplexity, args["before"].(*int64)), true
+		return e.complexity.Mutation.PurgeNTPOffsets(childComplexity, args["password"].(string), args["before"].(*int64)), true
 	case "Mutation.removeObserveNTPServer":
 		if e.complexity.Mutation.RemoveObserveNTPServer == nil {
 			break
@@ -205,7 +205,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.RemoveObserveNTPServer(childComplexity, args["uuid"].(string)), true
+		return e.complexity.Mutation.RemoveObserveNTPServer(childComplexity, args["password"].(string), args["uuid"].(string)), true
 	case "Mutation.setPollingInterval":
 		if e.complexity.Mutation.SetPollingInterval == nil {
 			break
@@ -216,7 +216,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.SetPollingInterval(childComplexity, args["interval"].(int64)), true
+		return e.complexity.Mutation.SetPollingInterval(childComplexity, args["password"].(string), args["interval"].(int64)), true
 	case "Mutation.setReferenceNTPServer":
 		if e.complexity.Mutation.SetReferenceNTPServer == nil {
 			break
@@ -227,7 +227,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.SetReferenceNTPServer(childComplexity, args["server"].(string)), true
+		return e.complexity.Mutation.SetReferenceNTPServer(childComplexity, args["password"].(string), args["server"].(string)), true
 	case "Mutation.updateObserveNTPServer":
 		if e.complexity.Mutation.UpdateObserveNTPServer == nil {
 			break
@@ -238,7 +238,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateObserveNTPServer(childComplexity, args["uuid"].(string), args["name"].(*string), args["address"].(*string), args["remark"].(*string)), true
+		return e.complexity.Mutation.UpdateObserveNTPServer(childComplexity, args["password"].(string), args["uuid"].(string), args["name"].(*string), args["address"].(*string), args["remark"].(*string)), true
 
 	case "NTPServer.address":
 		if e.complexity.NTPServer.Address == nil {
@@ -518,93 +518,17 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 func (ec *executionContext) field_Mutation_addObserveNTPServer_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "name", ec.unmarshalNString2string)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "password", ec.unmarshalNString2string)
 	if err != nil {
 		return nil, err
 	}
-	args["name"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "address", ec.unmarshalNString2string)
-	if err != nil {
-		return nil, err
-	}
-	args["address"] = arg1
-	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "remark", ec.unmarshalOString2ᚖstring)
-	if err != nil {
-		return nil, err
-	}
-	args["remark"] = arg2
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_purgeClockDrifts_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOInt642ᚖint64)
-	if err != nil {
-		return nil, err
-	}
-	args["before"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_purgeNTPOffsets_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOInt642ᚖint64)
-	if err != nil {
-		return nil, err
-	}
-	args["before"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_removeObserveNTPServer_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "uuid", ec.unmarshalNString2string)
-	if err != nil {
-		return nil, err
-	}
-	args["uuid"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_setPollingInterval_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "interval", ec.unmarshalNInt642int64)
-	if err != nil {
-		return nil, err
-	}
-	args["interval"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_setReferenceNTPServer_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "server", ec.unmarshalNString2string)
-	if err != nil {
-		return nil, err
-	}
-	args["server"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_updateObserveNTPServer_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "uuid", ec.unmarshalNString2string)
-	if err != nil {
-		return nil, err
-	}
-	args["uuid"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "name", ec.unmarshalOString2ᚖstring)
+	args["password"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "name", ec.unmarshalNString2string)
 	if err != nil {
 		return nil, err
 	}
 	args["name"] = arg1
-	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "address", ec.unmarshalOString2ᚖstring)
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "address", ec.unmarshalNString2string)
 	if err != nil {
 		return nil, err
 	}
@@ -614,6 +538,117 @@ func (ec *executionContext) field_Mutation_updateObserveNTPServer_args(ctx conte
 		return nil, err
 	}
 	args["remark"] = arg3
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_purgeClockDrifts_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "password", ec.unmarshalNString2string)
+	if err != nil {
+		return nil, err
+	}
+	args["password"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOInt642ᚖint64)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_purgeNTPOffsets_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "password", ec.unmarshalNString2string)
+	if err != nil {
+		return nil, err
+	}
+	args["password"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "before", ec.unmarshalOInt642ᚖint64)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_removeObserveNTPServer_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "password", ec.unmarshalNString2string)
+	if err != nil {
+		return nil, err
+	}
+	args["password"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "uuid", ec.unmarshalNString2string)
+	if err != nil {
+		return nil, err
+	}
+	args["uuid"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_setPollingInterval_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "password", ec.unmarshalNString2string)
+	if err != nil {
+		return nil, err
+	}
+	args["password"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "interval", ec.unmarshalNInt642int64)
+	if err != nil {
+		return nil, err
+	}
+	args["interval"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_setReferenceNTPServer_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "password", ec.unmarshalNString2string)
+	if err != nil {
+		return nil, err
+	}
+	args["password"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "server", ec.unmarshalNString2string)
+	if err != nil {
+		return nil, err
+	}
+	args["server"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateObserveNTPServer_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "password", ec.unmarshalNString2string)
+	if err != nil {
+		return nil, err
+	}
+	args["password"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "uuid", ec.unmarshalNString2string)
+	if err != nil {
+		return nil, err
+	}
+	args["uuid"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "name", ec.unmarshalOString2ᚖstring)
+	if err != nil {
+		return nil, err
+	}
+	args["name"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "address", ec.unmarshalOString2ᚖstring)
+	if err != nil {
+		return nil, err
+	}
+	args["address"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "remark", ec.unmarshalOString2ᚖstring)
+	if err != nil {
+		return nil, err
+	}
+	args["remark"] = arg4
 	return args, nil
 }
 
@@ -841,7 +876,7 @@ func (ec *executionContext) _Mutation_setPollingInterval(ctx context.Context, fi
 		ec.fieldContext_Mutation_setPollingInterval,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().SetPollingInterval(ctx, fc.Args["interval"].(int64))
+			return ec.resolvers.Mutation().SetPollingInterval(ctx, fc.Args["password"].(string), fc.Args["interval"].(int64))
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -882,7 +917,7 @@ func (ec *executionContext) _Mutation_setReferenceNTPServer(ctx context.Context,
 		ec.fieldContext_Mutation_setReferenceNTPServer,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().SetReferenceNTPServer(ctx, fc.Args["server"].(string))
+			return ec.resolvers.Mutation().SetReferenceNTPServer(ctx, fc.Args["password"].(string), fc.Args["server"].(string))
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -923,7 +958,7 @@ func (ec *executionContext) _Mutation_updateObserveNTPServer(ctx context.Context
 		ec.fieldContext_Mutation_updateObserveNTPServer,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().UpdateObserveNTPServer(ctx, fc.Args["uuid"].(string), fc.Args["name"].(*string), fc.Args["address"].(*string), fc.Args["remark"].(*string))
+			return ec.resolvers.Mutation().UpdateObserveNTPServer(ctx, fc.Args["password"].(string), fc.Args["uuid"].(string), fc.Args["name"].(*string), fc.Args["address"].(*string), fc.Args["remark"].(*string))
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -964,7 +999,7 @@ func (ec *executionContext) _Mutation_removeObserveNTPServer(ctx context.Context
 		ec.fieldContext_Mutation_removeObserveNTPServer,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().RemoveObserveNTPServer(ctx, fc.Args["uuid"].(string))
+			return ec.resolvers.Mutation().RemoveObserveNTPServer(ctx, fc.Args["password"].(string), fc.Args["uuid"].(string))
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -1005,7 +1040,7 @@ func (ec *executionContext) _Mutation_addObserveNTPServer(ctx context.Context, f
 		ec.fieldContext_Mutation_addObserveNTPServer,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().AddObserveNTPServer(ctx, fc.Args["name"].(string), fc.Args["address"].(string), fc.Args["remark"].(*string))
+			return ec.resolvers.Mutation().AddObserveNTPServer(ctx, fc.Args["password"].(string), fc.Args["name"].(string), fc.Args["address"].(string), fc.Args["remark"].(*string))
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -1046,7 +1081,7 @@ func (ec *executionContext) _Mutation_purgeNTPOffsets(ctx context.Context, field
 		ec.fieldContext_Mutation_purgeNTPOffsets,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().PurgeNTPOffsets(ctx, fc.Args["before"].(*int64))
+			return ec.resolvers.Mutation().PurgeNTPOffsets(ctx, fc.Args["password"].(string), fc.Args["before"].(*int64))
 		},
 		nil,
 		ec.marshalNBoolean2bool,
@@ -1087,7 +1122,7 @@ func (ec *executionContext) _Mutation_purgeClockDrifts(ctx context.Context, fiel
 		ec.fieldContext_Mutation_purgeClockDrifts,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Mutation().PurgeClockDrifts(ctx, fc.Args["before"].(*int64))
+			return ec.resolvers.Mutation().PurgeClockDrifts(ctx, fc.Args["password"].(string), fc.Args["before"].(*int64))
 		},
 		nil,
 		ec.marshalNBoolean2bool,

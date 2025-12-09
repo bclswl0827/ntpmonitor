@@ -37,18 +37,24 @@ type ServerOffset {
 }
 
 type Mutation {
-  setPollingInterval(interval: Int64!): Boolean!
-  setReferenceNTPServer(server: String!): Boolean!
+  setPollingInterval(password: String!, interval: Int64!): Boolean!
+  setReferenceNTPServer(password: String!, server: String!): Boolean!
   updateObserveNTPServer(
+    password: String!
     uuid: String!
     name: String
     address: String
     remark: String
   ): Boolean!
-  removeObserveNTPServer(uuid: String!): Boolean!
-  addObserveNTPServer(name: String!, address: String!, remark: String): Boolean!
-  purgeNTPOffsets(before: Int64): Boolean!
-  purgeClockDrifts(before: Int64): Boolean!
+  removeObserveNTPServer(password: String!, uuid: String!): Boolean!
+  addObserveNTPServer(
+    password: String!
+    name: String!
+    address: String!
+    remark: String
+  ): Boolean!
+  purgeNTPOffsets(password: String!, before: Int64): Boolean!
+  purgeClockDrifts(password: String!, before: Int64): Boolean!
 }
 
 type Query {

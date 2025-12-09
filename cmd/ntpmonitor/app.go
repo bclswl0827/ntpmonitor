@@ -27,6 +27,10 @@ func appStart(args arguments) {
 		logger.GetLogger(main).Fatalln(err)
 	}
 
+	if args.password == "" {
+		logger.GetLogger(main).Fatalln("you must set a password to prevent unauthorized changes to the settings.")
+	}
+
 	daoObj := dao.New(args.database)
 	if err := daoObj.Open(); err != nil {
 		logger.GetLogger(main).Fatalln(err)
@@ -66,6 +70,7 @@ func appStart(args arguments) {
 
 	httpServer := server.New(
 		&graph_resolver.Resolver{
+			Password:      args.password,
 			ActionHandler: actionHandler,
 			RemoteTimeFn:  remoteTimeFn,
 		},
