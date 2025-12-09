@@ -3,6 +3,12 @@ scalar Int64
 scalar Map
 scalar Any
 
+type RemoteTime {
+  timestamp: Int64!
+  syncedAt: Int64!
+  reference: String!
+}
+
 type ClockDrift {
   timestamp: Int64!
   reference: String!
@@ -46,7 +52,7 @@ type Mutation {
 }
 
 type Query {
-  getCurrentTime: Int64!
+  getCurrentTime: RemoteTime!
   getPollingInterval: Int64!
   getReferenceNTPServer: String!
   getObserveNTPServerList: [NTPServer!]!

@@ -1,0 +1,8 @@
+@import 'tailwindcss';
+@import 'tailwindcss-animated';
+@import 'tailwind-scrollbar-hide/v4';
+
+@plugin "@tailwindcss/typography";
+@plugin "daisyui" {
+    themes: light --default;
+}

@@ -81,6 +81,12 @@ type ComplexityRoot struct {
 		GetServerOffset         func(childComplexity int, uuid string, start int64, end *int64) int
 	}
 
+	RemoteTime struct {
+		Reference func(childComplexity int) int
+		SyncedAt  func(childComplexity int) int
+		Timestamp func(childComplexity int) int
+	}
+
 	ServerOffset struct {
 		Offset         func(childComplexity int) int
 		Reference      func(childComplexity int) int
@@ -104,7 +110,7 @@ type MutationResolver interface {
 	PurgeClockDrifts(ctx context.Context, before *int64) (bool, error)
 }
 type QueryResolver interface {
-	GetCurrentTime(ctx context.Context) (int64, error)
+	GetCurrentTime(ctx context.Context) (*graph_model.RemoteTime, error)
 	GetPollingInterval(ctx context.Context) (int64, error)
 	GetReferenceNTPServer(ctx context.Context) (string, error)
 	GetObserveNTPServerList(ctx context.Context) ([]*graph_model.NTPServer, error)
@@ -311,6 +317,25 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.GetServerOffset(childComplexity, args["uuid"].(string), args["start"].(int64), args["end"].(*int64)), true
+
+	case "RemoteTime.reference":
+		if e.complexity.RemoteTime.Reference == nil {
+			break
+		}
+
+		return e.complexity.RemoteTime.Reference(childComplexity), true
+	case "RemoteTime.syncedAt":
+		if e.complexity.RemoteTime.SyncedAt == nil {
+			break
+		}
+
+		return e.complexity.RemoteTime.SyncedAt(childComplexity), true
+	case "RemoteTime.timestamp":
+		if e.complexity.RemoteTime.Timestamp == nil {
+			break
+		}
+
+		return e.complexity.RemoteTime.Timestamp(childComplexity), true
 
 	case "ServerOffset.offset":
 		if e.complexity.ServerOffset.Offset == nil {
@@ -1250,7 +1275,7 @@ func (ec *executionContext) _Query_getCurrentTime(ctx context.Context, field gra
 			return ec.resolvers.Query().GetCurrentTime(ctx)
 		},
 		nil,
-		ec.marshalNInt642int64,
+		ec.marshalNRemoteTime2ᚖgithubᚗcomᚋbclswl0827ᚋntpmonitorᚋinternalᚋserverᚋgraph_resolverᚋmodelᚐRemoteTime,
 		true,
 		true,
 	)
@@ -1263,7 +1288,15 @@ func (ec *executionContext) fieldContext_Query_getCurrentTime(_ context.Context,
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int64 does not have child fields")
+			switch field.Name {
+			case "timestamp":
+				return ec.fieldContext_RemoteTime_timestamp(ctx, field)
+			case "syncedAt":
+				return ec.fieldContext_RemoteTime_syncedAt(ctx, field)
+			case "reference":
+				return ec.fieldContext_RemoteTime_reference(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type RemoteTime", field.Name)
 		},
 	}
 	return fc, nil
@@ -1583,6 +1616,93 @@ func (ec *executionContext) fieldContext_Query___schema(_ context.Context, field
 				return ec.fieldContext___Schema_directives(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type __Schema", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RemoteTime_timestamp(ctx context.Context, field graphql.CollectedField, obj *graph_model.RemoteTime) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_RemoteTime_timestamp,
+		func(ctx context.Context) (any, error) {
+			return obj.Timestamp, nil
+		},
+		nil,
+		ec.marshalNInt642int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_RemoteTime_timestamp(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RemoteTime",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RemoteTime_syncedAt(ctx context.Context, field graphql.CollectedField, obj *graph_model.RemoteTime) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_RemoteTime_syncedAt,
+		func(ctx context.Context) (any, error) {
+			return obj.SyncedAt, nil
+		},
+		nil,
+		ec.marshalNInt642int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_RemoteTime_syncedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RemoteTime",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RemoteTime_reference(ctx context.Context, field graphql.CollectedField, obj *graph_model.RemoteTime) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_RemoteTime_reference,
+		func(ctx context.Context) (any, error) {
+			return obj.Reference, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_RemoteTime_reference(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RemoteTime",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -3689,6 +3809,55 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 	return out
 }
 
+var remoteTimeImplementors = []string{"RemoteTime"}
+
+func (ec *executionContext) _RemoteTime(ctx context.Context, sel ast.SelectionSet, obj *graph_model.RemoteTime) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, remoteTimeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("RemoteTime")
+		case "timestamp":
+			out.Values[i] = ec._RemoteTime_timestamp(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "syncedAt":
+			out.Values[i] = ec._RemoteTime_syncedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "reference":
+			out.Values[i] = ec._RemoteTime_reference(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var serverOffsetImplementors = []string{"ServerOffset"}
 
 func (ec *executionContext) _ServerOffset(ctx context.Context, sel ast.SelectionSet, obj *graph_model.ServerOffset) graphql.Marshaler {
@@ -4273,6 +4442,20 @@ func (ec *executionContext) marshalNNTPServer2ᚖgithubᚗcomᚋbclswl0827ᚋntp
 		return graphql.Null
 	}
 	return ec._NTPServer(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNRemoteTime2githubᚗcomᚋbclswl0827ᚋntpmonitorᚋinternalᚋserverᚋgraph_resolverᚋmodelᚐRemoteTime(ctx context.Context, sel ast.SelectionSet, v graph_model.RemoteTime) graphql.Marshaler {
+	return ec._RemoteTime(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNRemoteTime2ᚖgithubᚗcomᚋbclswl0827ᚋntpmonitorᚋinternalᚋserverᚋgraph_resolverᚋmodelᚐRemoteTime(ctx context.Context, sel ast.SelectionSet, v *graph_model.RemoteTime) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._RemoteTime(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNServerOffset2ᚕᚖgithubᚗcomᚋbclswl0827ᚋntpmonitorᚋinternalᚋserverᚋgraph_resolverᚋmodelᚐServerOffsetᚄ(ctx context.Context, sel ast.SelectionSet, v []*graph_model.ServerOffset) graphql.Marshaler {

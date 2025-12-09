@@ -23,6 +23,12 @@ type NTPServer struct {
 type Query struct {
 }
 
+type RemoteTime struct {
+	Timestamp int64  `json:"timestamp"`
+	SyncedAt  int64  `json:"syncedAt"`
+	Reference string `json:"reference"`
+}
+
 type ServerOffset struct {
 	Timestamp      int64  `json:"timestamp"`
 	Reference      string `json:"reference"`

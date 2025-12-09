@@ -1,0 +1,7 @@
+query getCurrentTime {
+    getCurrentTime {
+        timestamp
+        syncedAt
+        reference
+    }
+}

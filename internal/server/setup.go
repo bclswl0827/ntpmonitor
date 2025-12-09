@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"runtime/debug"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
@@ -15,6 +16,7 @@ import (
 	"github.com/bclswl0827/ntpmonitor/internal/server/middleware/httplog"
 	"github.com/bclswl0827/ntpmonitor/internal/server/middleware/recovery"
 	"github.com/bclswl0827/ntpmonitor/web"
+	"github.com/gin-contrib/cors"
 	gzipHandler "github.com/gin-contrib/gzip"
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
@@ -39,15 +41,22 @@ func (s *httpServer) Setup(listen string) error {
 		return errors.New("fatal error occured")
 	})
 
-	s.engine.POST("/graphql", func(ctx *gin.Context) {
-		graphql.ServeHTTP(ctx.Writer, ctx.Request)
-	})
 	if os.Getenv("DEBUG") != "" {
+		s.engine.Use(cors.New(cors.Config{
+			MaxAge:        12 * time.Hour,
+			AllowOrigins:  []string{"*"},
+			ExposeHeaders: []string{"Content-Length", "Content-Disposition"},
+			AllowMethods:  []string{"GET", "POST", "PATCH"},
+			AllowHeaders:  []string{"Content-Type", "Authorization"},
+		}))
 		s.engine.GET("/graphql", func(ctx *gin.Context) {
 			writer, request := ctx.Writer, ctx.Request
 			playground.Handler("GraphQL API Debug", request.URL.Path).ServeHTTP(writer, request)
 		})
 	}
+	s.engine.POST("/graphql", func(ctx *gin.Context) {
+		graphql.ServeHTTP(ctx.Writer, ctx.Request)
+	})
 
 	webFs, webPath := web.NewEmbedFs()
 	vfs, err := static.EmbedFolder(webFs, webPath)

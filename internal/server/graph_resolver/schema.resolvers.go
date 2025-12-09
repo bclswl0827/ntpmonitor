@@ -80,12 +80,12 @@ func (r *mutationResolver) PurgeClockDrifts(ctx context.Context, before *int64) 
 }
 
 // GetCurrentTime is the resolver for the getCurrentTime field.
-func (r *queryResolver) GetCurrentTime(ctx context.Context) (int64, error) {
-	t, err := r.RemoteTimeFn()
+func (r *queryResolver) GetCurrentTime(ctx context.Context) (*graph_model.RemoteTime, error) {
+	t, s, ref, err := r.RemoteTimeFn()
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
-	return t.UnixMilli(), nil
+	return &graph_model.RemoteTime{Timestamp: t.UnixMilli(), SyncedAt: s.UnixMilli(), Reference: ref}, nil
 }
 
 // GetPollingInterval is the resolver for the getPollingInterval field.

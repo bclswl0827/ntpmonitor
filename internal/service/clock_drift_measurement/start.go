@@ -84,7 +84,7 @@ func (s *ClockDriftMeasurementImpl) getShortTermPPM(offset time.Duration, measur
 }
 
 func (s *ClockDriftMeasurementImpl) measureClockDrift(r polling_reference_server.Response, ppmWindow time.Duration) {
-	remoteTime, err := s.RemoteTimeFn()
+	remoteTime, _, _, err := s.RemoteTimeFn()
 	if err != nil {
 		return
 	}

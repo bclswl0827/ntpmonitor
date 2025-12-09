@@ -50,7 +50,7 @@ func (s *NTPOffsetMeasurementImpl) measureNTPOffset(r polling_reference_server.R
 			continue
 		}
 
-		remoteTime, err := s.RemoteTimeFn()
+		remoteTime, _, _, err := s.RemoteTimeFn()
 		if err != nil {
 			continue
 		}

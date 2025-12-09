@@ -10,6 +10,7 @@ require (
 	github.com/beevik/ntp v1.5.0
 	github.com/common-nighthawk/go-figure v0.0.0-20210622060536-734e95fb86be
 	github.com/cskr/pubsub/v2 v2.0.2
+	github.com/gin-contrib/cors v1.7.6
 	github.com/gin-contrib/gzip v1.2.5
 	github.com/gin-contrib/static v1.1.5
 	github.com/gin-gonic/gin v1.11.0

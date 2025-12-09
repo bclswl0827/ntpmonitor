@@ -73,7 +73,11 @@ func (s *PollingReferenceServerImpl) getCurrentReferenceOffset(server string, re
 	if err != nil {
 		return nil, err
 	}
+
+	s.remoteTime.setSyncedAt(timesource.MonotonicNow().Add(offset))
+	s.remoteTime.setReference(server)
 	s.remoteTime.setOffset(offset)
+
 	return &Response{Offset: offset, Reference: server}, nil
 }
 
