@@ -15,12 +15,56 @@ import (
 	"github.com/samber/lo"
 )
 
+// SetFailureRetries is the resolver for the setFailureRetries field.
+func (r *mutationResolver) SetFailureRetries(ctx context.Context, password string, retries int32) (bool, error) {
+	if !r.isValidPassword(password) {
+		return false, errors.New("unauthorized access")
+	}
+	if err := (&settings.FailureRetries{}).Set(r.ActionHandler, retries); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
 // SetPollingInterval is the resolver for the setPollingInterval field.
 func (r *mutationResolver) SetPollingInterval(ctx context.Context, password string, interval int64) (bool, error) {
 	if !r.isValidPassword(password) {
 		return false, errors.New("unauthorized access")
 	}
 	if err := (&settings.PollingInterval{}).Set(r.ActionHandler, interval); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+// SetPollingTimeout is the resolver for the setPollingTimeout field.
+func (r *mutationResolver) SetPollingTimeout(ctx context.Context, password string, timeout int64) (bool, error) {
+	if !r.isValidPassword(password) {
+		return false, errors.New("unauthorized access")
+	}
+	if err := (&settings.PollingTimeout{}).Set(r.ActionHandler, timeout); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+// SetPPMWindow is the resolver for the setPPMWindow field.
+func (r *mutationResolver) SetPPMWindow(ctx context.Context, password string, window int64) (bool, error) {
+	if !r.isValidPassword(password) {
+		return false, errors.New("unauthorized access")
+	}
+	if err := (&settings.PPMWindow{}).Set(r.ActionHandler, window); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+// SetRetentionDays is the resolver for the setRetentionDays field.
+func (r *mutationResolver) SetRetentionDays(ctx context.Context, password string, days int64) (bool, error) {
+	if !r.isValidPassword(password) {
+		return false, errors.New("unauthorized access")
+	}
+	if err := (&settings.RetentionDays{}).Set(r.ActionHandler, days); err != nil {
 		return false, err
 	}
 	return true, nil
@@ -101,6 +145,52 @@ func (r *mutationResolver) PurgeClockDrifts(ctx context.Context, password string
 	return err == nil, err
 }
 
+// GetGlobalSettings is the resolver for the getGlobalSettings field.
+func (r *queryResolver) GetGlobalSettings(ctx context.Context, password string) (*graph_model.GlobalSettings, error) {
+	if !r.isValidPassword(password) {
+		return nil, errors.New("unauthorized access")
+	}
+
+	retries, err := (&settings.FailureRetries{}).Get(r.ActionHandler)
+	if err != nil {
+		return nil, err
+	}
+	interval, err := (&settings.PollingInterval{}).Get(r.ActionHandler)
+	if err != nil {
+		return nil, err
+	}
+	timeout, err := (&settings.PollingTimeout{}).Get(r.ActionHandler)
+	if err != nil {
+		return nil, err
+	}
+	window, err := (&settings.PPMWindow{}).Get(r.ActionHandler)
+	if err != nil {
+		return nil, err
+	}
+	server, err := (&settings.ReferenceServer{}).Get(r.ActionHandler)
+	if err != nil {
+		return nil, err
+	}
+	retention, err := (&settings.RetentionDays{}).Get(r.ActionHandler)
+	if err != nil {
+		return nil, err
+	}
+
+	return &graph_model.GlobalSettings{
+		FailureRetries:  retries.(int64),
+		PollingInterval: interval.(int64),
+		PollingTimeout:  timeout.(int64),
+		PpmWindow:       window.(int64),
+		ReferenceServer: server.(string),
+		RetentionDays:   retention.(int64),
+	}, nil
+}
+
+// VerifyPassword is the resolver for the verifyPassword field.
+func (r *queryResolver) VerifyPassword(ctx context.Context, password string) (bool, error) {
+	return r.isValidPassword(password), nil
+}
+
 // GetCurrentTime is the resolver for the getCurrentTime field.
 func (r *queryResolver) GetCurrentTime(ctx context.Context) (*graph_model.RemoteTime, error) {
 	t, s, ref, err := r.RemoteTimeFn()
@@ -108,24 +198,6 @@ func (r *queryResolver) GetCurrentTime(ctx context.Context) (*graph_model.Remote
 		return nil, err
 	}
 	return &graph_model.RemoteTime{Timestamp: t.UnixMilli(), SyncedAt: s.UnixMilli(), Reference: ref}, nil
-}
-
-// GetPollingInterval is the resolver for the getPollingInterval field.
-func (r *queryResolver) GetPollingInterval(ctx context.Context) (int64, error) {
-	interval, err := (&settings.PollingInterval{}).Get(r.ActionHandler)
-	if err != nil {
-		return 0, err
-	}
-	return interval.(int64), nil
-}
-
-// GetReferenceNTPServer is the resolver for the getReferenceNTPServer field.
-func (r *queryResolver) GetReferenceNTPServer(ctx context.Context) (string, error) {
-	server, err := (&settings.ReferenceServer{}).Get(r.ActionHandler)
-	if err != nil {
-		return "", err
-	}
-	return server.(string), nil
 }
 
 // GetObserveNTPServerList is the resolver for the getObserveNTPServerList field.
@@ -136,16 +208,18 @@ func (r *queryResolver) GetObserveNTPServerList(ctx context.Context) ([]*graph_m
 	}
 	return lo.MapToSlice(list, func(_ string, val model.NtpServers) *graph_model.NTPServer {
 		return &graph_model.NTPServer{
-			UUID:    val.ServerUUID,
-			Address: val.Address,
-			Name:    val.ServerName,
-			Remark:  val.Remark,
+			UUID:      val.ServerUUID,
+			Address:   val.Address,
+			Name:      val.ServerName,
+			Remark:    val.Remark,
+			UpdatedAt: val.UpdatedAt,
+			CreatedAt: val.CreatedAt,
 		}
 	}), nil
 }
 
-// GetClockDrift is the resolver for the getClockDrift field.
-func (r *queryResolver) GetClockDrift(ctx context.Context, start int64, end *int64) ([]*graph_model.ClockDrift, error) {
+// GetClockDrifts is the resolver for the getClockDrifts field.
+func (r *queryResolver) GetClockDrifts(ctx context.Context, start int64, end *int64) ([]*graph_model.ClockDrift, error) {
 	var endTime *time.Time
 	if end != nil {
 		endTime = new(time.Time)
@@ -165,8 +239,8 @@ func (r *queryResolver) GetClockDrift(ctx context.Context, start int64, end *int
 	}), nil
 }
 
-// GetServerOffset is the resolver for the getServerOffset field.
-func (r *queryResolver) GetServerOffset(ctx context.Context, uuid string, start int64, end *int64) ([]*graph_model.ServerOffset, error) {
+// GetServerOffsets is the resolver for the getServerOffsets field.
+func (r *queryResolver) GetServerOffsets(ctx context.Context, uuid string, start int64, end *int64) ([]*graph_model.ServerOffset, error) {
 	var endTime *time.Time
 	if end != nil {
 		endTime = new(time.Time)

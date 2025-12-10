@@ -26,7 +26,7 @@ const Home = () => {
     const [localTimezone, setLocalTimezone] = useState(
         urlTimezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone
     );
-    const [currentLocale] = useState(Intl.DateTimeFormat().resolvedOptions().locale);
+    const [currentLocale] = useState('en-US');
     const [timezoneList] = useState(
         getTimeZones().sort((a, b) => a.rawOffsetInMinutes - b.rawOffsetInMinutes)
     );
@@ -140,14 +140,15 @@ const Home = () => {
         setSyncDetails(getSyncDetails());
     }, [timeSynced, isAccurate, timeDiff, getSyncDetails]);
 
-    const getCountryByTimezone = (timezone: string) => {
+    const getCountryByTimezone = useCallback((timezone: string) => {
         const entry = getTimeZones().find((z) => z.name === timezone);
         if (!entry) {
             return [];
         }
         return entry.countryName;
-    };
-    const getDisplayTime = (timestamp: number, locale: string, timezone: string) => {
+    }, []);
+
+    const getDisplayTime = useCallback((timestamp: number, locale: string, timezone: string) => {
         if (!timestamp) {
             return '--:--:--';
         }
@@ -162,9 +163,9 @@ const Home = () => {
 
         const get = (type: string) => parts.find((p) => p.type === type)?.value;
         return `${get('hour')}:${get('minute')}:${get('second')}`;
-    };
+    }, []);
 
-    const getDisplayDate = (timestamp: number, locale: string, timezone: string) => {
+    const getDisplayDate = useCallback((timestamp: number, locale: string, timezone: string) => {
         if (!timestamp) {
             return '';
         }
@@ -176,40 +177,43 @@ const Home = () => {
             month: 'long',
             day: 'numeric'
         }).format(new Date(timestamp));
-    };
+    }, []);
 
-    const getDisplayDateTime = (timestamp: number, locale: string, timezone: string) => {
-        if (!timestamp) {
-            return '';
-        }
+    const getDisplayDateTime = useCallback(
+        (timestamp: number, locale: string, timezone: string) => {
+            if (!timestamp) {
+                return '';
+            }
 
-        return new Intl.DateTimeFormat(locale, {
-            timeZone: timezone,
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: false
-        }).format(new Date(timestamp));
-    };
+            return new Intl.DateTimeFormat(locale, {
+                timeZone: timezone,
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            }).format(new Date(timestamp));
+        },
+        []
+    );
 
     return (
-        <div className="w-full">
+        <>
             <div className="ml-4 flex flex-col space-y-2 md:mt-6">
-                <div className="mb-2 flex flex-col gap-2 md:flex-row md:items-center">
+                <div className="mb-2 flex flex-col space-y-2 space-x-4 md:flex-row md:items-center">
                     <h2 className="text-4xl font-extrabold text-gray-800">{syncDetails.heading}</h2>
                     {timeSynced && (
                         <button
-                            className="btn btn-sm bg-base-200 hover:bg-base-300 rounded-md border px-3 py-1 font-semibold text-gray-700"
+                            className="btn btn-sm"
                             onClick={() => {
                                 setTimeSynced(false);
                                 syncTime();
                             }}
                         >
                             <Icon path={mdiRefresh} size={0.85} className="opacity-80" />
-                            <span className="tracking-wide">Resync</span>
+                            <span>Resync</span>
                         </button>
                     )}
                 </div>
@@ -217,7 +221,7 @@ const Home = () => {
                 <span className="font-mono text-gray-700">{syncDetails.content}</span>
 
                 <select
-                    className="w-fit max-w-full rounded border border-gray-300 p-2 font-mono text-sm"
+                    className="select-sm select w-fit max-w-full rounded border border-gray-300 font-mono text-sm outline-0"
                     value={localTimezone}
                     onChange={({ target }) => {
                         setLocalTimezone(target.value);
@@ -258,39 +262,39 @@ const Home = () => {
                     </div>
                     <div className="text-md flex flex-col items-start text-gray-600">
                         <div className="grid grid-cols-[auto_1fr] gap-x-2 font-mono text-sm">
-                            <span className="text-right">Local System Time:</span>
-                            <span className="font-medium">
+                            <span className="text-right font-medium">Local System Time:</span>
+                            <span>
                                 {getDisplayDateTime(Date.now(), currentLocale, localTimezone)}
                             </span>
-                            <span className="text-right">Last Synced At:</span>
-                            <span className="font-medium">
+                            <span className="text-right font-medium">Last Synced At:</span>
+                            <span>
                                 {getDisplayDateTime(syncedAt.local, currentLocale, localTimezone)}
                             </span>
-                            <span className="mb-2 text-right">Local Timezone:</span>
-                            <span className="font-medium">{localTimezone}</span>
+                            <span className="mb-2 text-right font-medium">Local Timezone:</span>
+                            <span>{localTimezone}</span>
 
-                            <span className="text-right">Round-trip Delay:</span>
-                            <span className="font-medium">{latency} ms</span>
-                            <span className="text-right">Local Time Offset:</span>
-                            <span className="font-medium">{timeDiff} ms</span>
-                            <span className="mb-2 text-right">Error Range:</span>
-                            <span className="font-medium">±{errorRange} ms</span>
+                            <span className="text-right font-medium">Round-trip Delay:</span>
+                            <span>{latency} ms</span>
+                            <span className="text-right font-medium">Local Time Offset:</span>
+                            <span>{timeDiff} ms</span>
+                            <span className="mb-2 text-right font-medium">Error Range:</span>
+                            <span>±{errorRange} ms</span>
 
-                            <span className="text-right">Upstream Synced At:</span>
-                            <span className="font-medium">
+                            <span className="text-right font-medium">Upstream Synced At:</span>
+                            <span>
                                 {getDisplayDateTime(
                                     syncedAt.upstream,
                                     currentLocale,
                                     localTimezone
                                 )}
                             </span>
-                            <span className="text-right">Upstream NTP Server:</span>
-                            <span className="font-medium">{referenceServer}</span>
+                            <span className="text-right font-medium">Upstream NTP Server:</span>
+                            <span>{referenceServer}</span>
                         </div>
                     </div>
                 </div>
             )}
-        </div>
+        </>
     );
 };
 

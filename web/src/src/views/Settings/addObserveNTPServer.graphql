@@ -1,0 +1,8 @@
+mutation addObserveNTPServer(
+    $password: String!
+    $name: String!
+    $address: String!
+    $remark: String
+) {
+    addObserveNTPServer(password: $password, name: $name, address: $address, remark: $remark)
+}

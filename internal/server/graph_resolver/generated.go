@@ -54,18 +54,32 @@ type ComplexityRoot struct {
 		Timestamp      func(childComplexity int) int
 	}
 
+	GlobalSettings struct {
+		FailureRetries  func(childComplexity int) int
+		PollingInterval func(childComplexity int) int
+		PollingTimeout  func(childComplexity int) int
+		PpmWindow       func(childComplexity int) int
+		ReferenceServer func(childComplexity int) int
+		RetentionDays   func(childComplexity int) int
+	}
+
 	Mutation struct {
 		AddObserveNTPServer    func(childComplexity int, password string, name string, address string, remark *string) int
 		PurgeClockDrifts       func(childComplexity int, password string, before *int64) int
 		PurgeNTPOffsets        func(childComplexity int, password string, before *int64) int
 		RemoveObserveNTPServer func(childComplexity int, password string, uuid string) int
+		SetFailureRetries      func(childComplexity int, password string, retries int32) int
+		SetPPMWindow           func(childComplexity int, password string, window int64) int
 		SetPollingInterval     func(childComplexity int, password string, interval int64) int
+		SetPollingTimeout      func(childComplexity int, password string, timeout int64) int
 		SetReferenceNTPServer  func(childComplexity int, password string, server string) int
+		SetRetentionDays       func(childComplexity int, password string, days int64) int
 		UpdateObserveNTPServer func(childComplexity int, password string, uuid string, name *string, address *string, remark *string) int
 	}
 
 	NTPServer struct {
 		Address   func(childComplexity int) int
+		CreatedAt func(childComplexity int) int
 		Name      func(childComplexity int) int
 		Remark    func(childComplexity int) int
 		UUID      func(childComplexity int) int
@@ -73,12 +87,12 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		GetClockDrift           func(childComplexity int, start int64, end *int64) int
+		GetClockDrifts          func(childComplexity int, start int64, end *int64) int
 		GetCurrentTime          func(childComplexity int) int
+		GetGlobalSettings       func(childComplexity int, password string) int
 		GetObserveNTPServerList func(childComplexity int) int
-		GetPollingInterval      func(childComplexity int) int
-		GetReferenceNTPServer   func(childComplexity int) int
-		GetServerOffset         func(childComplexity int, uuid string, start int64, end *int64) int
+		GetServerOffsets        func(childComplexity int, uuid string, start int64, end *int64) int
+		VerifyPassword          func(childComplexity int, password string) int
 	}
 
 	RemoteTime struct {
@@ -101,7 +115,11 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
+	SetFailureRetries(ctx context.Context, password string, retries int32) (bool, error)
 	SetPollingInterval(ctx context.Context, password string, interval int64) (bool, error)
+	SetPollingTimeout(ctx context.Context, password string, timeout int64) (bool, error)
+	SetPPMWindow(ctx context.Context, password string, window int64) (bool, error)
+	SetRetentionDays(ctx context.Context, password string, days int64) (bool, error)
 	SetReferenceNTPServer(ctx context.Context, password string, server string) (bool, error)
 	UpdateObserveNTPServer(ctx context.Context, password string, uuid string, name *string, address *string, remark *string) (bool, error)
 	RemoveObserveNTPServer(ctx context.Context, password string, uuid string) (bool, error)
@@ -110,12 +128,12 @@ type MutationResolver interface {
 	PurgeClockDrifts(ctx context.Context, password string, before *int64) (bool, error)
 }
 type QueryResolver interface {
+	GetGlobalSettings(ctx context.Context, password string) (*graph_model.GlobalSettings, error)
+	VerifyPassword(ctx context.Context, password string) (bool, error)
 	GetCurrentTime(ctx context.Context) (*graph_model.RemoteTime, error)
-	GetPollingInterval(ctx context.Context) (int64, error)
-	GetReferenceNTPServer(ctx context.Context) (string, error)
 	GetObserveNTPServerList(ctx context.Context) ([]*graph_model.NTPServer, error)
-	GetClockDrift(ctx context.Context, start int64, end *int64) ([]*graph_model.ClockDrift, error)
-	GetServerOffset(ctx context.Context, uuid string, start int64, end *int64) ([]*graph_model.ServerOffset, error)
+	GetClockDrifts(ctx context.Context, start int64, end *int64) ([]*graph_model.ClockDrift, error)
+	GetServerOffsets(ctx context.Context, uuid string, start int64, end *int64) ([]*graph_model.ServerOffset, error)
 }
 
 type executableSchema struct {
@@ -162,6 +180,43 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.ClockDrift.Timestamp(childComplexity), true
 
+	case "GlobalSettings.failureRetries":
+		if e.complexity.GlobalSettings.FailureRetries == nil {
+			break
+		}
+
+		return e.complexity.GlobalSettings.FailureRetries(childComplexity), true
+	case "GlobalSettings.pollingInterval":
+		if e.complexity.GlobalSettings.PollingInterval == nil {
+			break
+		}
+
+		return e.complexity.GlobalSettings.PollingInterval(childComplexity), true
+	case "GlobalSettings.pollingTimeout":
+		if e.complexity.GlobalSettings.PollingTimeout == nil {
+			break
+		}
+
+		return e.complexity.GlobalSettings.PollingTimeout(childComplexity), true
+	case "GlobalSettings.ppmWindow":
+		if e.complexity.GlobalSettings.PpmWindow == nil {
+			break
+		}
+
+		return e.complexity.GlobalSettings.PpmWindow(childComplexity), true
+	case "GlobalSettings.referenceServer":
+		if e.complexity.GlobalSettings.ReferenceServer == nil {
+			break
+		}
+
+		return e.complexity.GlobalSettings.ReferenceServer(childComplexity), true
+	case "GlobalSettings.retentionDays":
+		if e.complexity.GlobalSettings.RetentionDays == nil {
+			break
+		}
+
+		return e.complexity.GlobalSettings.RetentionDays(childComplexity), true
+
 	case "Mutation.addObserveNTPServer":
 		if e.complexity.Mutation.AddObserveNTPServer == nil {
 			break
@@ -206,6 +261,28 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.RemoveObserveNTPServer(childComplexity, args["password"].(string), args["uuid"].(string)), true
+	case "Mutation.setFailureRetries":
+		if e.complexity.Mutation.SetFailureRetries == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_setFailureRetries_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.SetFailureRetries(childComplexity, args["password"].(string), args["retries"].(int32)), true
+	case "Mutation.setPPMWindow":
+		if e.complexity.Mutation.SetPPMWindow == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_setPPMWindow_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.SetPPMWindow(childComplexity, args["password"].(string), args["window"].(int64)), true
 	case "Mutation.setPollingInterval":
 		if e.complexity.Mutation.SetPollingInterval == nil {
 			break
@@ -217,6 +294,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.SetPollingInterval(childComplexity, args["password"].(string), args["interval"].(int64)), true
+	case "Mutation.setPollingTimeout":
+		if e.complexity.Mutation.SetPollingTimeout == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_setPollingTimeout_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.SetPollingTimeout(childComplexity, args["password"].(string), args["timeout"].(int64)), true
 	case "Mutation.setReferenceNTPServer":
 		if e.complexity.Mutation.SetReferenceNTPServer == nil {
 			break
@@ -228,6 +316,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.SetReferenceNTPServer(childComplexity, args["password"].(string), args["server"].(string)), true
+	case "Mutation.setRetentionDays":
+		if e.complexity.Mutation.SetRetentionDays == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_setRetentionDays_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.SetRetentionDays(childComplexity, args["password"].(string), args["days"].(int64)), true
 	case "Mutation.updateObserveNTPServer":
 		if e.complexity.Mutation.UpdateObserveNTPServer == nil {
 			break
@@ -246,6 +345,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.NTPServer.Address(childComplexity), true
+	case "NTPServer.createdAt":
+		if e.complexity.NTPServer.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.NTPServer.CreatedAt(childComplexity), true
 	case "NTPServer.name":
 		if e.complexity.NTPServer.Name == nil {
 			break
@@ -271,52 +376,62 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.NTPServer.UpdatedAt(childComplexity), true
 
-	case "Query.getClockDrift":
-		if e.complexity.Query.GetClockDrift == nil {
+	case "Query.getClockDrifts":
+		if e.complexity.Query.GetClockDrifts == nil {
 			break
 		}
 
-		args, err := ec.field_Query_getClockDrift_args(ctx, rawArgs)
+		args, err := ec.field_Query_getClockDrifts_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Query.GetClockDrift(childComplexity, args["start"].(int64), args["end"].(*int64)), true
+		return e.complexity.Query.GetClockDrifts(childComplexity, args["start"].(int64), args["end"].(*int64)), true
 	case "Query.getCurrentTime":
 		if e.complexity.Query.GetCurrentTime == nil {
 			break
 		}
 
 		return e.complexity.Query.GetCurrentTime(childComplexity), true
+	case "Query.getGlobalSettings":
+		if e.complexity.Query.GetGlobalSettings == nil {
+			break
+		}
+
+		args, err := ec.field_Query_getGlobalSettings_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GetGlobalSettings(childComplexity, args["password"].(string)), true
 	case "Query.getObserveNTPServerList":
 		if e.complexity.Query.GetObserveNTPServerList == nil {
 			break
 		}
 
 		return e.complexity.Query.GetObserveNTPServerList(childComplexity), true
-	case "Query.getPollingInterval":
-		if e.complexity.Query.GetPollingInterval == nil {
+	case "Query.getServerOffsets":
+		if e.complexity.Query.GetServerOffsets == nil {
 			break
 		}
 
-		return e.complexity.Query.GetPollingInterval(childComplexity), true
-	case "Query.getReferenceNTPServer":
-		if e.complexity.Query.GetReferenceNTPServer == nil {
-			break
-		}
-
-		return e.complexity.Query.GetReferenceNTPServer(childComplexity), true
-	case "Query.getServerOffset":
-		if e.complexity.Query.GetServerOffset == nil {
-			break
-		}
-
-		args, err := ec.field_Query_getServerOffset_args(ctx, rawArgs)
+		args, err := ec.field_Query_getServerOffsets_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Query.GetServerOffset(childComplexity, args["uuid"].(string), args["start"].(int64), args["end"].(*int64)), true
+		return e.complexity.Query.GetServerOffsets(childComplexity, args["uuid"].(string), args["start"].(int64), args["end"].(*int64)), true
+	case "Query.verifyPassword":
+		if e.complexity.Query.VerifyPassword == nil {
+			break
+		}
+
+		args, err := ec.field_Query_verifyPassword_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.VerifyPassword(childComplexity, args["password"].(string)), true
 
 	case "RemoteTime.reference":
 		if e.complexity.RemoteTime.Reference == nil {
@@ -589,6 +704,38 @@ func (ec *executionContext) field_Mutation_removeObserveNTPServer_args(ctx conte
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_setFailureRetries_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "password", ec.unmarshalNString2string)
+	if err != nil {
+		return nil, err
+	}
+	args["password"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "retries", ec.unmarshalNInt322int32)
+	if err != nil {
+		return nil, err
+	}
+	args["retries"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_setPPMWindow_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "password", ec.unmarshalNString2string)
+	if err != nil {
+		return nil, err
+	}
+	args["password"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "window", ec.unmarshalNInt642int64)
+	if err != nil {
+		return nil, err
+	}
+	args["window"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_setPollingInterval_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -605,6 +752,22 @@ func (ec *executionContext) field_Mutation_setPollingInterval_args(ctx context.C
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_setPollingTimeout_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "password", ec.unmarshalNString2string)
+	if err != nil {
+		return nil, err
+	}
+	args["password"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "timeout", ec.unmarshalNInt642int64)
+	if err != nil {
+		return nil, err
+	}
+	args["timeout"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_setReferenceNTPServer_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -618,6 +781,22 @@ func (ec *executionContext) field_Mutation_setReferenceNTPServer_args(ctx contex
 		return nil, err
 	}
 	args["server"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_setRetentionDays_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "password", ec.unmarshalNString2string)
+	if err != nil {
+		return nil, err
+	}
+	args["password"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "days", ec.unmarshalNInt642int64)
+	if err != nil {
+		return nil, err
+	}
+	args["days"] = arg1
 	return args, nil
 }
 
@@ -663,7 +842,7 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 	return args, nil
 }
 
-func (ec *executionContext) field_Query_getClockDrift_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+func (ec *executionContext) field_Query_getClockDrifts_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "start", ec.unmarshalNInt642int64)
@@ -679,7 +858,18 @@ func (ec *executionContext) field_Query_getClockDrift_args(ctx context.Context, 
 	return args, nil
 }
 
-func (ec *executionContext) field_Query_getServerOffset_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+func (ec *executionContext) field_Query_getGlobalSettings_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "password", ec.unmarshalNString2string)
+	if err != nil {
+		return nil, err
+	}
+	args["password"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_getServerOffsets_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "uuid", ec.unmarshalNString2string)
@@ -697,6 +887,17 @@ func (ec *executionContext) field_Query_getServerOffset_args(ctx context.Context
 		return nil, err
 	}
 	args["end"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_verifyPassword_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "password", ec.unmarshalNString2string)
+	if err != nil {
+		return nil, err
+	}
+	args["password"] = arg0
 	return args, nil
 }
 
@@ -868,6 +1069,221 @@ func (ec *executionContext) fieldContext_ClockDrift_shortTermDrift(_ context.Con
 	return fc, nil
 }
 
+func (ec *executionContext) _GlobalSettings_failureRetries(ctx context.Context, field graphql.CollectedField, obj *graph_model.GlobalSettings) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_GlobalSettings_failureRetries,
+		func(ctx context.Context) (any, error) {
+			return obj.FailureRetries, nil
+		},
+		nil,
+		ec.marshalNInt642int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_GlobalSettings_failureRetries(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GlobalSettings",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _GlobalSettings_pollingInterval(ctx context.Context, field graphql.CollectedField, obj *graph_model.GlobalSettings) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_GlobalSettings_pollingInterval,
+		func(ctx context.Context) (any, error) {
+			return obj.PollingInterval, nil
+		},
+		nil,
+		ec.marshalNInt642int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_GlobalSettings_pollingInterval(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GlobalSettings",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _GlobalSettings_pollingTimeout(ctx context.Context, field graphql.CollectedField, obj *graph_model.GlobalSettings) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_GlobalSettings_pollingTimeout,
+		func(ctx context.Context) (any, error) {
+			return obj.PollingTimeout, nil
+		},
+		nil,
+		ec.marshalNInt642int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_GlobalSettings_pollingTimeout(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GlobalSettings",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _GlobalSettings_ppmWindow(ctx context.Context, field graphql.CollectedField, obj *graph_model.GlobalSettings) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_GlobalSettings_ppmWindow,
+		func(ctx context.Context) (any, error) {
+			return obj.PpmWindow, nil
+		},
+		nil,
+		ec.marshalNInt642int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_GlobalSettings_ppmWindow(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GlobalSettings",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _GlobalSettings_referenceServer(ctx context.Context, field graphql.CollectedField, obj *graph_model.GlobalSettings) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_GlobalSettings_referenceServer,
+		func(ctx context.Context) (any, error) {
+			return obj.ReferenceServer, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_GlobalSettings_referenceServer(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GlobalSettings",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _GlobalSettings_retentionDays(ctx context.Context, field graphql.CollectedField, obj *graph_model.GlobalSettings) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_GlobalSettings_retentionDays,
+		func(ctx context.Context) (any, error) {
+			return obj.RetentionDays, nil
+		},
+		nil,
+		ec.marshalNInt642int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_GlobalSettings_retentionDays(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GlobalSettings",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_setFailureRetries(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_setFailureRetries,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().SetFailureRetries(ctx, fc.Args["password"].(string), fc.Args["retries"].(int32))
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_setFailureRetries(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_setFailureRetries_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_setPollingInterval(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -903,6 +1319,129 @@ func (ec *executionContext) fieldContext_Mutation_setPollingInterval(ctx context
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_setPollingInterval_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_setPollingTimeout(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_setPollingTimeout,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().SetPollingTimeout(ctx, fc.Args["password"].(string), fc.Args["timeout"].(int64))
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_setPollingTimeout(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_setPollingTimeout_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_setPPMWindow(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_setPPMWindow,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().SetPPMWindow(ctx, fc.Args["password"].(string), fc.Args["window"].(int64))
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_setPPMWindow(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_setPPMWindow_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_setRetentionDays(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Mutation_setRetentionDays,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Mutation().SetRetentionDays(ctx, fc.Args["password"].(string), fc.Args["days"].(int64))
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Mutation_setRetentionDays(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_setRetentionDays_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -1271,6 +1810,35 @@ func (ec *executionContext) fieldContext_NTPServer_remark(_ context.Context, fie
 	return fc, nil
 }
 
+func (ec *executionContext) _NTPServer_createdAt(ctx context.Context, field graphql.CollectedField, obj *graph_model.NTPServer) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_NTPServer_createdAt,
+		func(ctx context.Context) (any, error) {
+			return obj.CreatedAt, nil
+		},
+		nil,
+		ec.marshalNInt642int64,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_NTPServer_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "NTPServer",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _NTPServer_updatedAt(ctx context.Context, field graphql.CollectedField, obj *graph_model.NTPServer) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -1296,6 +1864,102 @@ func (ec *executionContext) fieldContext_NTPServer_updatedAt(_ context.Context, 
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int64 does not have child fields")
 		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_getGlobalSettings(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_getGlobalSettings,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().GetGlobalSettings(ctx, fc.Args["password"].(string))
+		},
+		nil,
+		ec.marshalNGlobalSettings2ᚖgithubᚗcomᚋbclswl0827ᚋntpmonitorᚋinternalᚋserverᚋgraph_resolverᚋmodelᚐGlobalSettings,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_getGlobalSettings(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "failureRetries":
+				return ec.fieldContext_GlobalSettings_failureRetries(ctx, field)
+			case "pollingInterval":
+				return ec.fieldContext_GlobalSettings_pollingInterval(ctx, field)
+			case "pollingTimeout":
+				return ec.fieldContext_GlobalSettings_pollingTimeout(ctx, field)
+			case "ppmWindow":
+				return ec.fieldContext_GlobalSettings_ppmWindow(ctx, field)
+			case "referenceServer":
+				return ec.fieldContext_GlobalSettings_referenceServer(ctx, field)
+			case "retentionDays":
+				return ec.fieldContext_GlobalSettings_retentionDays(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type GlobalSettings", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_getGlobalSettings_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_verifyPassword(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Query_verifyPassword,
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.resolvers.Query().VerifyPassword(ctx, fc.Args["password"].(string))
+		},
+		nil,
+		ec.marshalNBoolean2bool,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Query_verifyPassword(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_verifyPassword_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
@@ -1337,64 +2001,6 @@ func (ec *executionContext) fieldContext_Query_getCurrentTime(_ context.Context,
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_getPollingInterval(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_Query_getPollingInterval,
-		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Query().GetPollingInterval(ctx)
-		},
-		nil,
-		ec.marshalNInt642int64,
-		true,
-		true,
-	)
-}
-
-func (ec *executionContext) fieldContext_Query_getPollingInterval(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int64 does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Query_getReferenceNTPServer(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_Query_getReferenceNTPServer,
-		func(ctx context.Context) (any, error) {
-			return ec.resolvers.Query().GetReferenceNTPServer(ctx)
-		},
-		nil,
-		ec.marshalNString2string,
-		true,
-		true,
-	)
-}
-
-func (ec *executionContext) fieldContext_Query_getReferenceNTPServer(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Query_getObserveNTPServerList(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -1427,6 +2033,8 @@ func (ec *executionContext) fieldContext_Query_getObserveNTPServerList(_ context
 				return ec.fieldContext_NTPServer_address(ctx, field)
 			case "remark":
 				return ec.fieldContext_NTPServer_remark(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_NTPServer_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_NTPServer_updatedAt(ctx, field)
 			}
@@ -1436,15 +2044,15 @@ func (ec *executionContext) fieldContext_Query_getObserveNTPServerList(_ context
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_getClockDrift(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Query_getClockDrifts(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Query_getClockDrift,
+		ec.fieldContext_Query_getClockDrifts,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().GetClockDrift(ctx, fc.Args["start"].(int64), fc.Args["end"].(*int64))
+			return ec.resolvers.Query().GetClockDrifts(ctx, fc.Args["start"].(int64), fc.Args["end"].(*int64))
 		},
 		nil,
 		ec.marshalNClockDrift2ᚕᚖgithubᚗcomᚋbclswl0827ᚋntpmonitorᚋinternalᚋserverᚋgraph_resolverᚋmodelᚐClockDriftᚄ,
@@ -1453,7 +2061,7 @@ func (ec *executionContext) _Query_getClockDrift(ctx context.Context, field grap
 	)
 }
 
-func (ec *executionContext) fieldContext_Query_getClockDrift(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_getClockDrifts(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -1480,22 +2088,22 @@ func (ec *executionContext) fieldContext_Query_getClockDrift(ctx context.Context
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_getClockDrift_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Query_getClockDrifts_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_getServerOffset(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Query_getServerOffsets(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
 		ec.OperationContext,
 		field,
-		ec.fieldContext_Query_getServerOffset,
+		ec.fieldContext_Query_getServerOffsets,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.resolvers.Query().GetServerOffset(ctx, fc.Args["uuid"].(string), fc.Args["start"].(int64), fc.Args["end"].(*int64))
+			return ec.resolvers.Query().GetServerOffsets(ctx, fc.Args["uuid"].(string), fc.Args["start"].(int64), fc.Args["end"].(*int64))
 		},
 		nil,
 		ec.marshalNServerOffset2ᚕᚖgithubᚗcomᚋbclswl0827ᚋntpmonitorᚋinternalᚋserverᚋgraph_resolverᚋmodelᚐServerOffsetᚄ,
@@ -1504,7 +2112,7 @@ func (ec *executionContext) _Query_getServerOffset(ctx context.Context, field gr
 	)
 }
 
-func (ec *executionContext) fieldContext_Query_getServerOffset(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_getServerOffsets(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -1541,7 +2149,7 @@ func (ec *executionContext) fieldContext_Query_getServerOffset(ctx context.Conte
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_getServerOffset_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Query_getServerOffsets_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -3512,6 +4120,70 @@ func (ec *executionContext) _ClockDrift(ctx context.Context, sel ast.SelectionSe
 	return out
 }
 
+var globalSettingsImplementors = []string{"GlobalSettings"}
+
+func (ec *executionContext) _GlobalSettings(ctx context.Context, sel ast.SelectionSet, obj *graph_model.GlobalSettings) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, globalSettingsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("GlobalSettings")
+		case "failureRetries":
+			out.Values[i] = ec._GlobalSettings_failureRetries(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "pollingInterval":
+			out.Values[i] = ec._GlobalSettings_pollingInterval(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "pollingTimeout":
+			out.Values[i] = ec._GlobalSettings_pollingTimeout(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "ppmWindow":
+			out.Values[i] = ec._GlobalSettings_ppmWindow(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "referenceServer":
+			out.Values[i] = ec._GlobalSettings_referenceServer(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "retentionDays":
+			out.Values[i] = ec._GlobalSettings_retentionDays(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var mutationImplementors = []string{"Mutation"}
 
 func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
@@ -3531,9 +4203,37 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Mutation")
+		case "setFailureRetries":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_setFailureRetries(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "setPollingInterval":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_setPollingInterval(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "setPollingTimeout":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_setPollingTimeout(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "setPPMWindow":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_setPPMWindow(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "setRetentionDays":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_setRetentionDays(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -3634,6 +4334,11 @@ func (ec *executionContext) _NTPServer(ctx context.Context, sel ast.SelectionSet
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "createdAt":
+			out.Values[i] = ec._NTPServer_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "updatedAt":
 			out.Values[i] = ec._NTPServer_updatedAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -3681,6 +4386,50 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Query")
+		case "getGlobalSettings":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getGlobalSettings(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "verifyPassword":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_verifyPassword(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "getCurrentTime":
 			field := field
 
@@ -3691,50 +4440,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_getCurrentTime(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx,
-					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "getPollingInterval":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_getPollingInterval(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx,
-					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "getReferenceNTPServer":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_getReferenceNTPServer(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -3769,7 +4474,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "getClockDrift":
+		case "getClockDrifts":
 			field := field
 
 			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
@@ -3778,7 +4483,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_getClockDrift(ctx, field)
+				res = ec._Query_getClockDrifts(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -3791,7 +4496,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "getServerOffset":
+		case "getServerOffsets":
 			field := field
 
 			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
@@ -3800,7 +4505,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_getServerOffset(ctx, field)
+				res = ec._Query_getServerOffsets(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -4393,6 +5098,20 @@ func (ec *executionContext) marshalNFloat2float64(ctx context.Context, sel ast.S
 	return graphql.WrapContextMarshaler(ctx, res)
 }
 
+func (ec *executionContext) marshalNGlobalSettings2githubᚗcomᚋbclswl0827ᚋntpmonitorᚋinternalᚋserverᚋgraph_resolverᚋmodelᚐGlobalSettings(ctx context.Context, sel ast.SelectionSet, v graph_model.GlobalSettings) graphql.Marshaler {
+	return ec._GlobalSettings(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNGlobalSettings2ᚖgithubᚗcomᚋbclswl0827ᚋntpmonitorᚋinternalᚋserverᚋgraph_resolverᚋmodelᚐGlobalSettings(ctx context.Context, sel ast.SelectionSet, v *graph_model.GlobalSettings) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._GlobalSettings(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v any) (int, error) {
 	res, err := graphql.UnmarshalInt(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -4401,6 +5120,22 @@ func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v any) (int, 
 func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
 	_ = sel
 	res := graphql.MarshalInt(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNInt322int32(ctx context.Context, v any) (int32, error) {
+	res, err := graphql.UnmarshalInt32(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNInt322int32(ctx context.Context, sel ast.SelectionSet, v int32) graphql.Marshaler {
+	_ = sel
+	res := graphql.MarshalInt32(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")

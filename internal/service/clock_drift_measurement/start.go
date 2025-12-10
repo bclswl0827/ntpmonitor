@@ -3,6 +3,7 @@ package clock_drift_measurement
 import (
 	"context"
 	"runtime/debug"
+	"sync/atomic"
 	"time"
 
 	"github.com/bclswl0827/ntpmonitor/internal/service/polling_reference_server"
@@ -111,6 +112,26 @@ func (s *ClockDriftMeasurementImpl) measureClockDrift(r polling_reference_server
 	}
 }
 
+func (s *ClockDriftMeasurementImpl) purgeExpiredData() {
+	retentionAny, err := (&settings.RetentionDays{}).Get(s.actionHandler)
+	if err != nil {
+		logger.GetLogger(s.Name()).Errorf("failed to get data retention days: %v", err)
+		return
+	}
+	retention := time.Duration(retentionAny.(int64)) * 24 * time.Hour
+
+	now, _, _, err := s.RemoteTimeFn()
+	if err != nil {
+		logger.GetLogger(s.Name()).Errorf("failed to get remote time: %v", err)
+		return
+	}
+
+	logger.GetLogger(s.Name()).Infof("purging expired clock drift records before %s", now.Add(-retention).Format(time.RFC3339))
+	if err := s.actionHandler.ClockDriftsRemoveBefore(now.Add(-retention)); err != nil {
+		logger.GetLogger(s.Name()).Errorf("failed to remove expired clock drift records: %v", err)
+	}
+}
+
 func (s *ClockDriftMeasurementImpl) initMeasurement(ppmWindow time.Duration) {
 	s.longBuf = ringbuf.New[driftItem](int(ppmWindow.Seconds()) * 2)
 	s.alpha = 0.05
@@ -127,6 +148,9 @@ func (s *ClockDriftMeasurementImpl) Start() {
 	ppmWindow := s.getLongTermPPMWindow()
 	s.initMeasurement(ppmWindow)
 
+	// 0 = idle, 1 = running
+	var measurementRunning int32
+
 	s.wg.Go(func() {
 		defer func() {
 			if r := recover(); r != nil {
@@ -134,7 +158,16 @@ func (s *ClockDriftMeasurementImpl) Start() {
 			}
 		}()
 
-		s.messageBus.Subscribe("reference-offset", s.Name(), func(r polling_reference_server.Response) { s.measureClockDrift(r, ppmWindow) })
+		s.messageBus.Subscribe("reference-offset", s.Name(), func(r polling_reference_server.Response) {
+			if !atomic.CompareAndSwapInt32(&measurementRunning, 0, 1) {
+				logger.GetLogger(s.Name()).Warnf("previous clock drift measurement still running, skip this event")
+				return
+			}
+			defer atomic.StoreInt32(&measurementRunning, 0)
+
+			s.measureClockDrift(r, ppmWindow)
+			s.purgeExpiredData()
+		})
 		<-s.ctx.Done()
 	})
 }

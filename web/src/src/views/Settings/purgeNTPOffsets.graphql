@@ -1,0 +1,3 @@
+mutation purgeNTPOffsets($password: String!, $before: Int64) {
+    purgeNTPOffsets(password: $password, before: $before)
+}

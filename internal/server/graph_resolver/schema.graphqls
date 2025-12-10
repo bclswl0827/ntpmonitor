@@ -9,6 +9,15 @@ type RemoteTime {
   reference: String!
 }
 
+type GlobalSettings {
+  failureRetries: Int64!
+  pollingInterval: Int64!
+  pollingTimeout: Int64!
+  ppmWindow: Int64!
+  referenceServer: String!
+  retentionDays: Int64!
+}
+
 type ClockDrift {
   timestamp: Int64!
   reference: String!
@@ -21,6 +30,7 @@ type NTPServer {
   name: String!
   address: String!
   remark: String!
+  createdAt: Int64!
   updatedAt: Int64!
 }
 
@@ -37,7 +47,11 @@ type ServerOffset {
 }
 
 type Mutation {
+  setFailureRetries(password: String!, retries: Int32!): Boolean!
   setPollingInterval(password: String!, interval: Int64!): Boolean!
+  setPollingTimeout(password: String!, timeout: Int64!): Boolean!
+  setPPMWindow(password: String!, window: Int64!): Boolean!
+  setRetentionDays(password: String!, days: Int64!): Boolean!
   setReferenceNTPServer(password: String!, server: String!): Boolean!
   updateObserveNTPServer(
     password: String!
@@ -58,10 +72,10 @@ type Mutation {
 }
 
 type Query {
+  getGlobalSettings(password: String!): GlobalSettings!
+  verifyPassword(password: String!): Boolean!
   getCurrentTime: RemoteTime!
-  getPollingInterval: Int64!
-  getReferenceNTPServer: String!
   getObserveNTPServerList: [NTPServer!]!
-  getClockDrift(start: Int64!, end: Int64): [ClockDrift!]!
-  getServerOffset(uuid: String!, start: Int64!, end: Int64): [ServerOffset!]!
+  getClockDrifts(start: Int64!, end: Int64): [ClockDrift!]!
+  getServerOffsets(uuid: String!, start: Int64!, end: Int64): [ServerOffset!]!
 }

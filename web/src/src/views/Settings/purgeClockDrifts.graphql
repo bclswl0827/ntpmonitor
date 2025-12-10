@@ -1,0 +1,3 @@
+mutation purgeClockDrifts($password: String!, $before: Int64) {
+    purgeClockDrifts(password: $password, before: $before)
+}

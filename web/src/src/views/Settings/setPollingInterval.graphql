@@ -1,0 +1,3 @@
+mutation setPollingInterval($password: String!, $interval: Int64!) {
+    setPollingInterval(password: $password, interval: $interval)
+}

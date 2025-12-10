@@ -20,7 +20,9 @@ const graphQlClient = new ApolloClient({
 });
 
 createRoot(document.getElementById('root')!).render(
-    <ErrorBoundary fallback={<ErrorPage heading="Something went wrong." />}>
+    <ErrorBoundary
+        fallback={<ErrorPage heading="Something went wrong." content="Please try again later." />}
+    >
         <ApolloProvider client={graphQlClient}>
             <RouterWrapper mode={routerConfig.mode} basename={routerConfig.basename}>
                 <App />

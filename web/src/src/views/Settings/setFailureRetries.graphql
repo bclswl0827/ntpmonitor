@@ -1,0 +1,3 @@
+mutation setFailureRetries($password: String!, $retries: Int32!) {
+    setFailureRetries(password: $password, retries: $retries)
+}

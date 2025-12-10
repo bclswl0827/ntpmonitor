@@ -25,8 +25,6 @@ export const Skeleton = ({ height }: ISkeleton) => {
                         <div className="bg-base-300 h-3 w-9/12 rounded-full"></div>
                         <div className="bg-base-300 h-3 w-8/12 rounded-full"></div>
                     </div>
-
-                    {index < skeletonRows - 1 && <div className="divider my-2 opacity-20"></div>}
                 </div>
             ))}
         </div>

@@ -1,0 +1,8 @@
+query getClockDrifts($start: Int64!, $end: Int64) {
+    getClockDrifts(start: $start, end: $end) {
+        timestamp
+        reference
+        longTermDrift
+        shortTermDrift
+    }
+}

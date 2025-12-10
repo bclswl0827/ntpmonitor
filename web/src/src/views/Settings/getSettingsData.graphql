@@ -1,0 +1,10 @@
+query getSettingsData($password: String!) {
+    getGlobalSettings(password: $password) {
+        failureRetries
+        pollingInterval
+        pollingTimeout
+        ppmWindow
+        referenceServer
+        retentionDays
+    }
+}

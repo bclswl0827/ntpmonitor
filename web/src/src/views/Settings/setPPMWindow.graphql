@@ -1,0 +1,3 @@
+mutation setPPMWindow($password: String!, $window: Int64!) {
+    setPPMWindow(password: $password, window: $window)
+}

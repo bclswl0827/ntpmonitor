@@ -95,6 +95,7 @@ func (s *PollingReferenceServerImpl) Start() {
 		&settings.FailureRetries{},
 		&settings.ReferenceServer{},
 		&settings.PPMWindow{},
+		&settings.RetentionDays{},
 	} {
 		if err := setting.Init(s.actionHandler); err != nil {
 			logger.GetLogger(s.Name()).Errorf("failed to init setting: %v", err)

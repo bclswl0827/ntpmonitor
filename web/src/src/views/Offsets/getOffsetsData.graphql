@@ -1,0 +1,27 @@
+query getObserveNTPServerList {
+    getCurrentTime {
+        timestamp
+    }
+    getObserveNTPServerList {
+        uuid
+        name
+        address
+        remark
+        updatedAt
+        createdAt
+    }
+}
+
+query getServerOffsets($uuid: String!, $start: Int64!, $end: Int64) {
+    getServerOffsets(uuid: $uuid, start: $start, end: $end) {
+        timestamp
+        reference
+        offset
+        roundTrip
+        rootDelay
+        rootDispersion
+        rootDistance
+        stratum
+        serverRefId
+    }
+}

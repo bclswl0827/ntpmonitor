@@ -9,6 +9,15 @@ type ClockDrift struct {
 	ShortTermDrift float64 `json:"shortTermDrift"`
 }
 
+type GlobalSettings struct {
+	FailureRetries  int64  `json:"failureRetries"`
+	PollingInterval int64  `json:"pollingInterval"`
+	PollingTimeout  int64  `json:"pollingTimeout"`
+	PpmWindow       int64  `json:"ppmWindow"`
+	ReferenceServer string `json:"referenceServer"`
+	RetentionDays   int64  `json:"retentionDays"`
+}
+
 type Mutation struct {
 }
 
@@ -17,6 +26,7 @@ type NTPServer struct {
 	Name      string `json:"name"`
 	Address   string `json:"address"`
 	Remark    string `json:"remark"`
+	CreatedAt int64  `json:"createdAt"`
 	UpdatedAt int64  `json:"updatedAt"`
 }
 

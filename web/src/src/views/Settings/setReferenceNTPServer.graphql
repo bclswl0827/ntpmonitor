@@ -1,0 +1,3 @@
+mutation setReferenceNTPServer($password: String!, $server: String!) {
+    setReferenceNTPServer(password: $password, server: $server)
+}

@@ -1,0 +1,3 @@
+mutation setPollingTimeout($password: String!, $timeout: Int64!) {
+    setPollingTimeout(password: $password, timeout: $timeout)
+}

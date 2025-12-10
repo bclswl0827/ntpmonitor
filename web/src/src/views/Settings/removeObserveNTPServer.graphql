@@ -1,0 +1,3 @@
+mutation removeObserveNTPServer($password: String!, $uuid: String!) {
+    removeObserveNTPServer(password: $password, uuid: $uuid)
+}

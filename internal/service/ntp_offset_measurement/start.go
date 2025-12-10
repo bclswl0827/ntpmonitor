@@ -68,6 +68,26 @@ func (s *NTPOffsetMeasurementImpl) measureNTPOffset(r polling_reference_server.R
 	}
 }
 
+func (s *NTPOffsetMeasurementImpl) purgeExpiredData() {
+	retentionAny, err := (&settings.RetentionDays{}).Get(s.actionHandler)
+	if err != nil {
+		logger.GetLogger(s.Name()).Errorf("failed to get data retention days: %v", err)
+		return
+	}
+	retention := time.Duration(retentionAny.(int64)) * 24 * time.Hour
+
+	now, _, _, err := s.RemoteTimeFn()
+	if err != nil {
+		logger.GetLogger(s.Name()).Errorf("failed to get remote time: %v", err)
+		return
+	}
+
+	logger.GetLogger(s.Name()).Infof("purging expired NTP offset records before %s", now.Add(-retention).Format(time.RFC3339))
+	if err := s.actionHandler.ServerOffsetsRemoveBefore(now.Add(-retention)); err != nil {
+		logger.GetLogger(s.Name()).Errorf("failed to remove expired NTP offset records: %v", err)
+	}
+}
+
 func (s *NTPOffsetMeasurementImpl) Start() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -77,7 +97,7 @@ func (s *NTPOffsetMeasurementImpl) Start() {
 	}
 
 	// 0 = idle, 1 = running
-	var probeRunning int32
+	var measurementRunning int32
 
 	s.wg.Go(func() {
 		defer func() {
@@ -88,13 +108,14 @@ func (s *NTPOffsetMeasurementImpl) Start() {
 		}()
 
 		s.messageBus.Subscribe("reference-offset", s.Name(), func(r polling_reference_server.Response) {
-			if !atomic.CompareAndSwapInt32(&probeRunning, 0, 1) {
-				logger.GetLogger(s.Name()).Warnf("previous offset measurement still running, skip this event")
+			if !atomic.CompareAndSwapInt32(&measurementRunning, 0, 1) {
+				logger.GetLogger(s.Name()).Warnf("previous NTP server offset measurement still running, skip this event")
 				return
 			}
-			defer atomic.StoreInt32(&probeRunning, 0)
+			defer atomic.StoreInt32(&measurementRunning, 0)
 
 			s.measureNTPOffset(r, s.getObserveServerPollingTimeout())
+			s.purgeExpiredData()
 		})
 
 		<-s.ctx.Done()

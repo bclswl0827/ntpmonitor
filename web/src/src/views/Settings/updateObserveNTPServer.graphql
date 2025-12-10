@@ -1,0 +1,15 @@
+mutation updateObserveNTPServer(
+    $password: String!
+    $uuid: String!
+    $name: String
+    $address: String
+    $remark: String
+) {
+    updateObserveNTPServer(
+        password: $password
+        uuid: $uuid
+        name: $name
+        address: $address
+        remark: $remark
+    )
+}
