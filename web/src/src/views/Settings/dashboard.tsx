@@ -276,8 +276,9 @@ export const Dashboard = ({ password }: IDashboard) => {
                 <h2 className="text-4xl font-extrabold text-gray-800">Global Settings</h2>
                 <button
                     className="btn btn-sm max-w-fit"
-                    onClick={() => {
-                        getObserveNtpServerRefetch();
+                    onClick={async () => {
+                        await getSettingsDataRefetch();
+                        await getObserveNtpServerRefetch();
                     }}
                 >
                     <Icon path={mdiRefresh} size={0.85} className="opacity-80" />

@@ -284,7 +284,7 @@ const Offsets = () => {
                                 <h2 className="card-title">Select Servers</h2>
                                 <div className="mt-4 max-h-screen overflow-scroll">
                                     {Object.entries(ntpServerList)
-                                        .sort((a, b) => a[1].createdAt - b[1].createdAt)
+                                        .sort((a, b) => b[1].createdAt - a[1].createdAt)
                                         .map(([uuid, s]) => (
                                             <label
                                                 key={uuid}
