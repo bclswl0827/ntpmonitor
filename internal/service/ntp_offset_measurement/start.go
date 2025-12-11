@@ -55,7 +55,7 @@ func (s *NTPOffsetMeasurementImpl) measureNTPOffset(r polling_reference_server.R
 			continue
 		}
 
-		offset := r.Offset - res.Resp.ClockOffset
+		offset := res.Resp.ClockOffset - r.Offset
 		if err := s.actionHandler.ServerOffsetsNew(
 			remoteTime,
 			r.Reference,
