@@ -33,11 +33,15 @@ const Drifts = () => {
     const [getCurrentTime] = useGetCurrentTimeLazyQuery();
     const queryClockDrifts = useCallback(
         async (duration = 60 * 60 * 1000) => {
-            const { data } = await getCurrentTime();
-            if (data) {
-                const endTime = data.getCurrentTime.timestamp;
-                const startTime = endTime - duration;
-                await mapClockDriftsToState(startTime, endTime);
+            try {
+                const { data } = await getCurrentTime();
+                if (data) {
+                    const endTime = data.getCurrentTime.timestamp;
+                    const startTime = endTime - duration;
+                    await mapClockDriftsToState(startTime, endTime);
+                }
+            } catch {
+                /* empty */
             }
         },
         [getCurrentTime, mapClockDriftsToState]
@@ -54,7 +58,9 @@ const Drifts = () => {
             { label: '60 min', ms: 60 * 60 * 1000 },
             { label: '6 hours', ms: 6 * 60 * 60 * 1000 },
             { label: '12 hours', ms: 12 * 60 * 60 * 1000 },
-            { label: '24 hours', ms: 24 * 60 * 60 * 1000 }
+            { label: '24 hours', ms: 24 * 60 * 60 * 1000 },
+            { label: '48 hours', ms: 48 * 60 * 60 * 1000 },
+            { label: '72 hours', ms: 72 * 60 * 60 * 1000 }
         ],
         []
     );
@@ -152,7 +158,7 @@ const Drifts = () => {
     };
 
     return (
-        <div className="ml-4 flex flex-col space-y-4 md:mt-6">
+        <div className="mx-4 flex flex-col space-y-4 md:mt-6">
             <div className="flex flex-col space-y-2">
                 <h2 className="mb-2 text-4xl font-extrabold text-gray-800">
                     Clock Drifts Visualization

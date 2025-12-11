@@ -90,11 +90,11 @@ func (s *PollingReferenceServerImpl) Start() {
 	}
 
 	for _, setting := range []settings.IUserSetting{
+		&settings.FailureRetries{},
 		&settings.PollingInterval{},
 		&settings.PollingTimeout{},
-		&settings.FailureRetries{},
-		&settings.ReferenceServer{},
 		&settings.PPMWindow{},
+		&settings.ReferenceServer{},
 		&settings.RetentionDays{},
 	} {
 		if err := setting.Init(s.actionHandler); err != nil {

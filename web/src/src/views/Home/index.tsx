@@ -34,22 +34,26 @@ const Home = () => {
     const syncTime = useCallback(async () => {
         const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
         const getSample = async () => {
-            const monoT0 = performance.now();
-            const t0 = Date.now();
-            const res = await getCurrentTime();
-            const monoT1 = performance.now();
-            const t1 = Date.now();
+            try {
+                const monoT0 = performance.now();
+                const t0 = Date.now();
+                const res = await getCurrentTime();
+                const monoT1 = performance.now();
+                const t1 = Date.now();
 
-            if (res.error || !res.data) {
+                if (res.error || !res.data) {
+                    return null;
+                }
+
+                const { timestamp, syncedAt, reference } = res.data.getCurrentTime;
+                const rtt = monoT1 - monoT0;
+                const wallDiff = (t0 + t1) / 2 - timestamp;
+                const monoDiff = (monoT0 + monoT1) / 2 - timestamp;
+
+                return { rtt, wallDiff, monoDiff, syncedAt, reference };
+            } catch {
                 return null;
             }
-
-            const { timestamp, syncedAt, reference } = res.data.getCurrentTime;
-            const rtt = monoT1 - monoT0;
-            const wallDiff = (t0 + t1) / 2 - timestamp;
-            const monoDiff = (monoT0 + monoT1) / 2 - timestamp;
-
-            return { rtt, wallDiff, monoDiff, syncedAt, reference };
         };
 
         await sleep(500);
@@ -96,7 +100,7 @@ const Home = () => {
         if (timeSynced) {
             const timer = setInterval(() => {
                 setSyncedLocalTimestamp(performance.now() - timeDiff.monotonic);
-            }, 0);
+            }, 100);
             return () => clearInterval(timer);
         }
     }, [timeDiff.monotonic, timeSynced]);
@@ -193,12 +197,12 @@ const Home = () => {
 
     return (
         <>
-            <div className="ml-4 flex flex-col space-y-2 md:mt-6">
+            <div className="mx-4 flex flex-col space-y-2 md:mt-6">
                 <div className="mb-2 flex flex-col space-y-2 space-x-4 md:flex-row md:items-center">
                     <h2 className="text-4xl font-extrabold text-gray-800">{syncDetails.heading}</h2>
                     {timeSynced && (
                         <button
-                            className="btn btn-sm"
+                            className="btn btn-sm max-w-fit"
                             onClick={() => {
                                 setTimeSynced(false);
                                 syncTime();
@@ -249,7 +253,7 @@ const Home = () => {
 
             {timeSynced && (
                 <div className="mx-8 mt-16 flex flex-col items-end space-y-2 font-mono lg:mt-8">
-                    <div className="text-[clamp(1.3rem,2vw,4rem)] font-light text-gray-700">
+                    <div className="text-lg font-light text-gray-700 md:text-[clamp(1.3rem,2vw,4rem)]">
                         {getDisplayDate(syncedLocalTimestamp, currentLocale, localTimezone)}
                     </div>
                     <div className="text-md flex flex-col items-start text-gray-600">

@@ -23,7 +23,7 @@ func (s *PollingTimeout) Set(handler *action.Handler, newVal any) error {
 	if err != nil {
 		return err
 	}
-	if typedVal < 1 || typedVal > 60 {
+	if typedVal < 1 || typedVal > 300 {
 		return fmt.Errorf("invalid polling timeout value (must be between 1 and 60), got %d", typedVal)
 	}
 	if err := handler.UserSettingsSet(s.GetKey(), s.GetType(), typedVal); err != nil {

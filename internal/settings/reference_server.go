@@ -28,6 +28,15 @@ func (s *ReferenceServer) Set(handler *action.Handler, newVal any) error {
 	if err != nil {
 		return err
 	}
+
+	rec, err := handler.NtpServersFindByAddress(fixedAddr)
+	if err != nil {
+		return err
+	}
+	if rec.Address == fixedAddr {
+		return fmt.Errorf("reference server can't be same with observation server: %s", fixedAddr)
+	}
+
 	if err := handler.UserSettingsSet(s.GetKey(), s.GetType(), fixedAddr); err != nil {
 		return fmt.Errorf("failed to set reference server: %w", err)
 	}

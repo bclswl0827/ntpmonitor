@@ -4,7 +4,6 @@ import (
 	"errors"
 
 	"github.com/bclswl0827/ntpmonitor/internal/dao/model"
-	"github.com/bclswl0827/ntpmonitor/pkg/ntpclient"
 	"github.com/google/uuid"
 )
 
@@ -13,15 +12,11 @@ func (s *Handler) NtpServersNew(name, address, remark string) error {
 		return errors.New("database is not opened")
 	}
 
-	fixedAddr, err := ntpclient.FixHostPort(address, 123)
-	if err != nil {
-		return err
-	}
 	obj := model.NtpServers{
 		ServerUUID: uuid.New().String(),
 		ServerName: name,
 		Remark:     remark,
-		Address:    fixedAddr,
+		Address:    address,
 	}
 
 	return s.daoObj.Engine.
@@ -49,6 +44,40 @@ func (s *Handler) NtpServersList() (map[string]model.NtpServers, error) {
 	}
 
 	return result, nil
+}
+
+func (s *Handler) NtpServersFindByAddress(address string) (model.NtpServers, error) {
+	if s.daoObj == nil {
+		return model.NtpServers{}, errors.New("database is not opened")
+	}
+
+	var item model.NtpServers
+	err := s.daoObj.Engine.
+		Table((&model.NtpServers{}).Name()).
+		Where("server_addr = ?", address).
+		First(&item).Error
+	if err != nil {
+		return model.NtpServers{}, err
+	}
+
+	return item, nil
+}
+
+func (s *Handler) NtpServersFindByUUID(uuid string) (model.NtpServers, error) {
+	if s.daoObj == nil {
+		return model.NtpServers{}, errors.New("database is not opened")
+	}
+
+	var item model.NtpServers
+	err := s.daoObj.Engine.
+		Table((&model.NtpServers{}).Name()).
+		Where("server_uuid = ?", uuid).
+		First(&item).Error
+	if err != nil {
+		return model.NtpServers{}, err
+	}
+
+	return item, nil
 }
 
 func (s *Handler) NtpServersRemove(serverUUID string) error {

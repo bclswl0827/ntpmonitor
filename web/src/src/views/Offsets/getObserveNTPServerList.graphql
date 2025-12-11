@@ -1,0 +1,13 @@
+query getObserveNTPServerList {
+    getCurrentTime {
+        timestamp
+    }
+    getObserveNTPServerList {
+        uuid
+        name
+        address
+        remark
+        updatedAt
+        createdAt
+    }
+}

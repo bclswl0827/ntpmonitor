@@ -7,11 +7,13 @@ package graph_resolver
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/bclswl0827/ntpmonitor/internal/dao/model"
 	graph_model "github.com/bclswl0827/ntpmonitor/internal/server/graph_resolver/model"
 	"github.com/bclswl0827/ntpmonitor/internal/settings"
+	"github.com/bclswl0827/ntpmonitor/pkg/ntpclient"
 	"github.com/samber/lo"
 )
 
@@ -86,9 +88,24 @@ func (r *mutationResolver) UpdateObserveNTPServer(ctx context.Context, password 
 	if !r.isValidPassword(password) {
 		return false, errors.New("unauthorized access")
 	}
-	if err := r.ActionHandler.NtpServersUpdate(uuid, name, address, remark); err != nil {
+
+	fixedAddr, err := ntpclient.FixHostPort(*address, 123)
+	if err != nil {
 		return false, err
 	}
+
+	referenceServer, err := (&settings.ReferenceServer{}).Get(r.ActionHandler)
+	if err != nil {
+		return false, err
+	}
+	if fixedAddr == referenceServer.(string) {
+		return false, fmt.Errorf("observation server can't be same with reference server: %s", fixedAddr)
+	}
+
+	if err := r.ActionHandler.NtpServersUpdate(uuid, name, &fixedAddr, remark); err != nil {
+		return false, err
+	}
+
 	return true, nil
 }
 
@@ -111,7 +128,21 @@ func (r *mutationResolver) AddObserveNTPServer(ctx context.Context, password str
 	if remark == nil {
 		remark = new(string)
 	}
-	if err := r.ActionHandler.NtpServersNew(name, address, *remark); err != nil {
+
+	referenceServer, err := (&settings.ReferenceServer{}).Get(r.ActionHandler)
+	if err != nil {
+		return false, err
+	}
+
+	fixedAddr, err := ntpclient.FixHostPort(address, 123)
+	if err != nil {
+		return false, err
+	}
+	if fixedAddr == referenceServer.(string) {
+		return false, fmt.Errorf("observation server can't be same with reference server: %s", fixedAddr)
+	}
+
+	if err := r.ActionHandler.NtpServersNew(name, fixedAddr, *remark); err != nil {
 		return false, err
 	}
 	return true, nil

@@ -1,41 +1,14 @@
 import { mdiGithub } from '@mdi/js';
 import Icon from '@mdi/react';
-import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import { RouterView } from './components/RouterView';
 import { Skeleton } from './components/Skeleton';
 import { globalConfig } from './config/global';
 import { menuConfig } from './config/menu';
 import { routerConfig } from './config/router';
-import { sendUserConfirm } from './helpers/alert/sendUserConfirm';
 
 const App = () => {
-    const {
-        needRefresh: [needRefreshApp, setNeedRefreshApp],
-        updateServiceWorker
-    } = useRegisterSW({
-        onRegistered(r) {
-            if (r) {
-                setInterval(() => {
-                    r.update();
-                }, globalConfig.update);
-            }
-        }
-    });
-    useEffect(() => {
-        if (needRefreshApp) {
-            sendUserConfirm('New version is available, do you want to update?', {
-                title: 'Update available',
-                cancelBtnText: 'Cancel',
-                confirmBtnText: 'Update',
-                onConfirmed: () => updateServiceWorker(),
-                onCancelled: () => setNeedRefreshApp(false)
-            });
-        }
-    }, [needRefreshApp, setNeedRefreshApp, updateServiceWorker]);
-
     return (
         <div className="bg-base-100 flex h-screen flex-col overflow-hidden md:flex-row">
             <div className="border-base-300 flex shrink-0 flex-col p-4 md:border-r">
