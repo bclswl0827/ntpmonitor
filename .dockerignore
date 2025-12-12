@@ -1,0 +1,4 @@
+Dockerfile
+
+build/dist
+web/src/node_modules
