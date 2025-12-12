@@ -1,8 +1,8 @@
 FROM alpine:latest AS web
 # Uncomment the following line to use a mirror of APK repository
-ENV APK_SOURCE_HOST="mirror.tuna.tsinghua.edu.cn"
+# ENV APK_SOURCE_HOST="mirror.tuna.tsinghua.edu.cn"
 # Uncomment the following line to use a mirror of npm registry
-ENV NPM_REGISTRY_HOST="registry.npmmirror.com"
+# ENV NPM_REGISTRY_HOST="registry.npmmirror.com"
 COPY . /build_src
 WORKDIR /build_src/web/src
 RUN if [ ! -d "../dist" ]; then \
@@ -20,9 +20,9 @@ RUN if [ ! -d "../dist" ]; then \
 
 FROM golang:alpine AS builder
 # Uncomment the following line to use a mirror of APK repository
-ENV APK_SOURCE_HOST="mirrors.tuna.tsinghua.edu.cn"
+# ENV APK_SOURCE_HOST="mirrors.tuna.tsinghua.edu.cn"
 # Uncomment the following line to use a mirror of go module proxy
-ENV GOPROXY="https://goproxy.cn,direct"
+# ENV GOPROXY="https://goproxy.cn,direct"
 COPY . /build_src
 COPY --from=web /build_src/web/dist /build_src/web/dist
 WORKDIR /build_src

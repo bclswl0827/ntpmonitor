@@ -276,7 +276,7 @@ const Offsets = () => {
                 )}
             </div>
 
-            {getObserveNtpServerListData?.getObserveNTPServerList !== undefined ? (
+            {Object.keys(ntpServerList).length !== 0 ? (
                 <div className="flex flex-col space-x-4 md:flex-row">
                     <div className="flex flex-1 flex-col space-y-4 p-2 md:w-1/2">
                         <div className="card card-border bg-base-100 w-full rounded-md shadow-md">

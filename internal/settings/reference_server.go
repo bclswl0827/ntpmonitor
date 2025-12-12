@@ -29,11 +29,7 @@ func (s *ReferenceServer) Set(handler *action.Handler, newVal any) error {
 		return err
 	}
 
-	rec, err := handler.NtpServersFindByAddress(fixedAddr)
-	if err != nil {
-		return err
-	}
-	if rec.Address == fixedAddr {
+	if rec, _ := handler.NtpServersFindByAddress(fixedAddr); rec.Address != "" && rec.Address == fixedAddr {
 		return fmt.Errorf("reference server can't be same with observation server: %s", fixedAddr)
 	}
 
