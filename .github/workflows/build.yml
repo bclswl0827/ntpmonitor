@@ -166,11 +166,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.target_id }}
-          path: build/dist/*
+          path: build/*
 
       - name: Package release
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
-        working-directory: build/dist
+        working-directory: build
         run: |
           zip -r ../${{ matrix.target_id }}.zip *
 
