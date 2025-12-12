@@ -21,6 +21,7 @@ Before using **NTP Monitor**, you should have:
 NTP Monitor can be installed via precompiled binaries, or built from source:
 
 - **Precompiled binaries**: Available on the [releases page](https://github.com/bclswl0827/ntpmonitor/releases).
+- **Docker image**: [ghcr.io/bclswl0827/ntpmonitor](https://github.com/bclswl0827/ntpmonitor/pkgs/container/ntpmonitor)
 - **Build from source**:
 
   ```bash
@@ -66,9 +67,9 @@ ntpmonitor -password <your-admin-password>
 
 It launches the web UI and begins monitoring. By default, it listens on `0.0.0.0:6060` and stores data in `./states.db`. You can open the web interface in a browser to see current time, real-time server offsets, and clock drifts.
 
-### Perform Local Time Check
+### Perform Browser Time Check
 
-Upon opening the homepage, the web interface automatically compares the local system time against the reference time to measure local clock offset.
+Upon opening the homepage, the web interface automatically compares the local browser time against the reference time to measure user-end clock offset.
 
 ![image](images/local-time-check.png)
 
@@ -84,7 +85,7 @@ After a few minutes to several hours, the measured offsets for each monitored NT
 
 ![image](images/ntp-server-offsets.png)
 
-## Analyzing Clock Drifts
+### Analyzing Clock Drifts
 
 Clock drift analysis is divided into **Long-term Clock Drift** and **Short-term Clock Drift**:
 
