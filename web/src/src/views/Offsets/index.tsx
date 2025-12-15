@@ -119,6 +119,10 @@ const Offsets = () => {
         [queryServerOffsets, selectedServers]
     );
 
+    useEffect(() => {
+        queryAllServerOffsets(queryTime[0], queryTime[1]);
+    }, [queryAllServerOffsets, queryTime]);
+
     const queryOptions = useMemo(
         () => [
             { label: '10 min', ms: 10 * 60 * 1000 },
