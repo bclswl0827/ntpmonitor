@@ -45,7 +45,7 @@ export const Dashboard = ({ password }: IDashboard) => {
     const handlePurgeOffsetRecords = async () => {
         confirm('Are you sure to purge all offset records?');
         try {
-            await purgeNtpOffsets();
+            await purgeNtpOffsets({ variables: { password, before: 0 } });
         } catch {
             /* empty */
         }
@@ -55,7 +55,7 @@ export const Dashboard = ({ password }: IDashboard) => {
     const handlePurgeDriftRecords = async () => {
         confirm('Are you sure to purge all drift records?');
         try {
-            await purgeClockDriftRecords();
+            await purgeClockDriftRecords({ variables: { password, before: 0 } });
         } catch {
             /* empty */
         }
