@@ -43,7 +43,9 @@ interface INtpServer {
 export const Dashboard = ({ password }: IDashboard) => {
     const [purgeNtpOffsets] = usePurgeNtpOffsetsMutation();
     const handlePurgeOffsetRecords = async () => {
-        confirm('Are you sure to purge all offset records?');
+        if (!confirm('Are you sure to purge all offset records?')) {
+            return;
+        }
         try {
             await purgeNtpOffsets({ variables: { password, before: 0 } });
         } catch {
@@ -53,7 +55,9 @@ export const Dashboard = ({ password }: IDashboard) => {
 
     const [purgeClockDriftRecords] = usePurgeClockDriftsMutation();
     const handlePurgeDriftRecords = async () => {
-        confirm('Are you sure to purge all drift records?');
+        if (!confirm('Are you sure to purge all drift records?')) {
+            return;
+        }
         try {
             await purgeClockDriftRecords({ variables: { password, before: 0 } });
         } catch {
@@ -261,7 +265,9 @@ export const Dashboard = ({ password }: IDashboard) => {
     const [removeObserveNtpServer, { loading: removeObserveNtpServerLoading }] =
         useRemoveObserveNtpServerMutation();
     const handleRemoveNtpServer = async (uuid: string) => {
-        confirm('Are you sure to remove this NTP server?');
+        if (!confirm('Are you sure to remove this NTP server?')) {
+            return;
+        }
         try {
             await removeObserveNtpServer({ variables: { password, uuid } });
             await getObserveNtpServerRefetch();
